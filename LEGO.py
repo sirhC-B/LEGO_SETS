@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import *
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from funktions import *
 
 
@@ -325,18 +325,22 @@ class UserInterface:
 
     def fill_legoData(self, setNr):
         dict = get_details_from_web(setNr)
-
-        self.setNameBox.delete(0, END)
-        self.setNameBox.insert(END, dict['Name'])
-        self.setIDbox.delete(0, END)
-        self.setIDbox.insert(END, dict['Setnummer'])
-        self.setRetailBox.delete(0, END)
-        self.setRetailBox.insert(END, dict['UVP'])
-        self.themeVar.set(dict['Thema'])
-        self.themeChoices[0] = dict['Thema']
-        self.releaseBox.delete(0, END)
-        self.releaseBox.insert(END, dict['Erscheinungsjahr'])
-
+        if dict is None:
+            rootWin=Tk()
+            rootWin.withdraw()
+            messagebox.showerror("Fehler", "Die gesuche SET-Nummer ist nicht vorhanden",parent=rootWin)
+            rootWin.destroy()
+        else:
+            self.setNameBox.delete(0, END)
+            self.setNameBox.insert(END, dict['Name'])
+            self.setIDbox.delete(0, END)
+            self.setIDbox.insert(END, dict['Setnummer'])
+            self.setRetailBox.delete(0, END)
+            self.setRetailBox.insert(END, dict['UVP'])
+            self.themeVar.set(dict['Thema'])
+            self.themeChoices[0] = dict['Thema']
+            self.releaseBox.delete(0, END)
+            self.releaseBox.insert(END, dict['Erscheinungsjahr'])
 
 
 if __name__ == '__main__':
