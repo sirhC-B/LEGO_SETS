@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
+import sqlite3
 import requests
 import re
 
 from LEGO import *
+
 
 
 def get_details_from_web(set_nr):
@@ -32,3 +34,53 @@ def get_details_from_web(set_nr):
             details_dict["Thema"] = thema
 
     return details_dict
+
+def add_theme_to_DB(themeNameTO, subThemeTO):
+    try:
+        db = sqlite3.connect('lego_db')
+        db.cursor()
+        db.execute(f"""INSERT INTO lego_themes VALUES ("{themeNameTO}","{subThemeTO}"
+                       )""")
+        db.commit()
+        text = f"Thema {themeNameTO} erfolgreich in die Datenbank hinzugefuegt."
+    except:
+        text = "Fehler beim anlegen des Themas."
+
+    finally:
+        return text
+
+def add_shop_to_DB(shopNameTO, urlTO):
+    try:
+        db = sqlite3.connect('lego_db')
+        db.cursor()
+        db.execute(f"""INSERT INTO lego_shops VALUES ("{shopNameTO}","{urlTO}"
+                       )""")
+        db.commit()
+        text = f"Shop {shopNameTO} erfolgreich in die Datenbank hinzugefuegt."
+    except:
+        text = "Fehler beim anlegen des Shops."
+
+    finally:
+        return text
+
+def get_shop_list():
+    db = sqlite3.connect('lego_db')
+    cursor = db.cursor()
+    cursor.execute("SELECT shopName FROM lego_shops;")
+    shopList = list()
+
+    for index in cursor.fetchall():
+        shopList.append(str(index)[2:-3])
+
+    return shopList
+
+def get_theme_list():
+    db = sqlite3.connect('lego_db')
+    cursor = db.cursor()
+    cursor.execute("SELECT themeName FROM lego_themes;")
+    themeList = list()
+
+    for index in cursor.fetchall():
+        themeList.append(str(index)[2:-3])
+
+    return themeList
