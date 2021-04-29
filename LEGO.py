@@ -2,9 +2,11 @@ import tkinter
 from tkinter import *
 from tkinter import ttk, messagebox
 from funktions import *
+import sqlite3,create_db
 
 
 class UserInterface:
+
     def __init__(self):
         self.root = tkinter.Tk()
         self.root.title('LEGO SETs')
@@ -167,7 +169,7 @@ class UserInterface:
                 self.add_theme()
 
         def callback_shop(*args):
-            if var1.get() == 'Neuen Shop anlegen':
+            if self.shopVar.get() == 'Neuen Shop anlegen':
                 self.add_shop()
 
         ########### FRAMES #############
@@ -205,7 +207,9 @@ class UserInterface:
         ########### THEME ############
         self.themeLabel = Label(legoData, text="THEME")
         self.themeLabel.grid(row=3, column=1, sticky=W, padx=6)
-        self.themeChoices = ['a', 'b', 'Neues Thema anlegen']
+        self.themeChoices = [' ', 'Neues Thema anlegen']
+        for index in get_theme_list():
+            self.themeChoices.append(index)
         self.themeVar = StringVar()
         self.themeVar.set(self.themeChoices[0])
         self.themeBox = OptionMenu(legoData, self.themeVar, *self.themeChoices)
@@ -246,13 +250,15 @@ class UserInterface:
         ######### SHOP ############
         shopLabel = Label(portfolioData, text="SHOP")
         shopLabel.grid(row=3, column=1, sticky=W, padx=6)
-        choices1 = ['a', 'b', 'Neuen Shop anlegen']
-        var1 = StringVar()
-        var1.set(choices1[0])
-        shopBox = OptionMenu(portfolioData, var1, *choices1)
+        self.shopChoices = [' ', 'Neuen Shop anlegen']
+        for index in get_shop_list():
+            self.shopChoices.append(index)
+        self.shopVar = StringVar()
+        self.shopVar.set(self.shopChoices[0])
+        shopBox = OptionMenu(portfolioData, self.shopVar, *self.shopChoices)
         shopBox.config(width=16, borderwidth=1)
         shopBox.grid(row=4, column=1, padx=6)
-        var1.trace("w", callback_shop)
+        self.shopVar.trace("w", callback_shop)
         ############################
         amountLabel = Label(portfolioData, text="AMOUNT")
         amountLabel.grid(row=5, column=1, sticky=W, padx=6)
@@ -290,6 +296,7 @@ class UserInterface:
         ########### GRAPH ############
         spaceHolder = Label(mainFrame, text="HIER WERDEN SPAETER DIE STATS GEZEIGT")
         spaceHolder.pack(padx=20, pady=100)
+        print(get_shop_list())
 
     def add_theme(self):
         newThemeTopWin = Toplevel()
@@ -300,13 +307,17 @@ class UserInterface:
         nameBox.grid(row=1, column=0, padx=5)
         subLabel = Label(newThemeTopWin, text="Sub Theme")
         subLabel.grid(row=0, column=1, pady=5, sticky=W, padx=5)
-        options = ['Test', '2', '3']
+        options = ['', '2', '3']
         var = StringVar()
         var.set(options[0])
         subThemes = OptionMenu(newThemeTopWin, var, *options)
         subThemes.grid(row=1, column=1, padx=5)
         subThemes.config(width=16, borderwidth=1)
-        addBut = Button(newThemeTopWin, text="Add")
+        addBut = Button(newThemeTopWin, text="Add",
+                        command=lambda: [self.fill_messagebox(add_theme_to_DB(nameBox.get(), var.get())),
+                                         self.themeVar.set(nameBox.get()),
+                                         nameBox.delete(0, END),
+                                         newThemeTopWin.destroy()])
         addBut.grid(row=3, columnspan=2, pady=8)
 
     def add_shop(self):
@@ -316,19 +327,24 @@ class UserInterface:
         nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=5)
         nameBox = Entry(newShopTopWin)
         nameBox.grid(row=1, column=0, padx=5)
-        urlLabel = Label(newShopTopWin, text="Sub Theme")
+        urlLabel = Label(newShopTopWin, text="URL")
         urlLabel.grid(row=0, column=1, pady=5, sticky=W, padx=5)
         urlBox = Entry(newShopTopWin)
         urlBox.grid(row=1, column=1, pady=5, padx=5)
-        addBut = Button(newShopTopWin, text="Add")
+        addBut = Button(newShopTopWin, text="Add",
+                        command=lambda: [self.fill_messagebox(add_shop_to_DB(nameBox.get(), urlBox.get())),
+                                         self.shopVar.set(nameBox.get()),
+                                         nameBox.delete(0, END), urlBox.delete(0, END),
+                                         newShopTopWin.destroy()])
         addBut.grid(row=3, columnspan=2, pady=8)
 
     def fill_legoData(self, setNr):
         dict = get_details_from_web(setNr)
+
         if dict is None:
-            rootWin=Tk()
+            rootWin = Tk()
             rootWin.withdraw()
-            messagebox.showerror("Fehler", "Die gesuche SET-Nummer ist nicht vorhanden",parent=rootWin)
+            messagebox.showerror("Fehler", "Die gesuche SET-Nummer ist nicht vorhanden", parent=rootWin)
             rootWin.destroy()
         else:
             self.setNameBox.delete(0, END)
@@ -342,6 +358,11 @@ class UserInterface:
             self.releaseBox.delete(0, END)
             self.releaseBox.insert(END, dict['Erscheinungsjahr'])
 
+    def fill_messagebox(self, message):
+        self.textInfo.insert(END, message + "\n")
+
 
 if __name__ == '__main__':
+    db = sqlite3.connect('lego_db')
+    create_db.create_table(db)
     gui = UserInterface()
