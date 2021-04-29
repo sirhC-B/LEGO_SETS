@@ -8,7 +8,7 @@ def create_table(db):
     c = db.cursor()
     c.execute('''
 
-                CREATE TABLE lego_sets(
+                CREATE TABLE IF NOT EXISTS lego_sets(
                     setID int NOT NULL,
                     setName varchar(30),
                     setUvp float,
@@ -20,21 +20,21 @@ def create_table(db):
                 ''')
     c.execute('''
                 
-                CREATE TABLE lego_themes(
+                CREATE TABLE IF NOT EXISTS lego_themes(
                     themeName varchar(30) NOT NULL ,
                     subTheme varchar(30),
                     PRIMARY KEY (themeName)
                 );
                 ''')
     c.execute('''
-                CREATE TABLE lego_shops(
+                CREATE TABLE IF NOT EXISTS lego_shops(
                     shopName varchar(30) NOT NULL ,
                     shopUrl varchar(80),
                     PRIMARY KEY (shopName)
                 );
                 ''')
     c.execute('''
-                CREATE TABLE lego_purchases(
+                CREATE TABLE IF NOT EXISTS lego_purchases(
                     purchaseID int NOT NULL,
                     purchasePrice float,
                     purchaseDate date,
