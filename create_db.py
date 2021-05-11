@@ -10,7 +10,7 @@ def create_table(db):
 
                 CREATE TABLE IF NOT EXISTS lego_sets(
                     setID int NOT NULL,
-                    setName varchar(30),
+                    setName varchar(30) NOT NULL ,
                     setUvp float,
                     setYear int,
                     setTheme varchar(30),
@@ -21,9 +21,9 @@ def create_table(db):
     c.execute('''
                 
                 CREATE TABLE IF NOT EXISTS lego_themes(
+                    themeID INTEGER PRIMARY KEY AUTOINCREMENT,
                     themeName varchar(30) NOT NULL ,
-                    subTheme varchar(30),
-                    PRIMARY KEY (themeName)
+                    subTheme varchar(30)
                 );
                 ''')
     c.execute('''
@@ -35,14 +35,13 @@ def create_table(db):
                 ''')
     c.execute('''
                 CREATE TABLE IF NOT EXISTS lego_purchases(
-                    purchaseID int NOT NULL,
+                    purchaseID INTEGER PRIMARY KEY AUTOINCREMENT,
                     purchasePrice float,
                     purchaseDate date,
                     purchaseDisc float,
                     purchaseAmount int,
-                    purchaseSet varchar(30),
+                    purchaseSet int NOT NULL ,
                     purchaseShop varchar(30),
-                    PRIMARY KEY (purchaseID),
                     FOREIGN KEY (purchaseSet) REFERENCES lego_sets(setID),
                     FOREIGN KEY (purchaseShop) REFERENCES lego_shops(shopName)  
                 );
