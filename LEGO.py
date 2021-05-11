@@ -1,8 +1,10 @@
 import tkinter
 from tkinter import *
 from tkinter import ttk, messagebox
+from tkinter.ttk import Notebook, Treeview
+
 from funktions import *
-import sqlite3,create_db
+import sqlite3, create_db
 
 
 class UserInterface:
@@ -10,7 +12,12 @@ class UserInterface:
     def __init__(self):
         self.root = tkinter.Tk()
         self.root.title('LEGO SETs')
-        self.root.geometry('900x400')
+        w, h = 900, 400
+        ws = self.root.winfo_screenwidth()
+        hs = self.root.winfo_screenheight()
+        x = (ws / 2) - (w / 2)
+        y = (hs / 2) - (h / 2)
+        self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
         ############### FRAMES ##############
         self.topTapFrame = Frame(self.root, borderwidth=1)
@@ -30,17 +37,20 @@ class UserInterface:
         self.headline.pack()
 
         ############ BUTTONS ###########
-        self.testButton = Button(self.rightFrame, text="HINZU", width=18, pady=8, command=self.add_record)
-        self.testButton.grid(row=0)
+        self.Button1 = Button(self.rightFrame, text="HINZU", width=18, pady=8, command=self.add_record)
+        self.Button1.grid(row=0)
 
-        self.testButton = Button(self.rightFrame, text="DELETE", width=18, pady=8)
-        self.testButton.grid(row=1, pady=5)
+        self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8)
+        self.Button2.grid(row=1, pady=5)
 
-        self.testButton = Button(self.rightFrame, text="DETAILS", width=18, pady=8, command=self.open_details)
-        self.testButton.grid(row=2)
+        self.Button3 = Button(self.rightFrame, text="DETAILS", width=18, pady=8, command=self.open_details)
+        self.Button3.grid(row=2)
 
-        self.testButton = Button(self.rightFrame, text="STATISTIC", width=18, pady=8, command=self.open_stats)
-        self.testButton.grid(row=3, pady=5)
+        self.Button4 = Button(self.rightFrame, text="STATISTIC", width=18, pady=8, command=self.open_stats)
+        self.Button4.grid(row=3, pady=5)
+
+        self.Button5 = Button(self.rightFrame, text="SET DATABASE", width=18, pady=8, command=self.edit_database)
+        self.Button5.grid(row=4)
 
         ############ TREEVIEW #############
         self.tree = ttk.Treeview(self.treeFrame)
@@ -186,7 +196,7 @@ class UserInterface:
         sucheEntry = Entry(sucheLabel)
         sucheEntry.grid(row=0, column=0, padx=6)
         sucheBut = Button(sucheLabel, text="go", height=1,
-                          command=lambda: [self.fill_legoData(sucheEntry.get()), sucheEntry.delete(0, END)])
+                          command=lambda: [self.fill_legoData(sucheEntry.get(), 1), sucheEntry.delete(0, END)])
         sucheBut.grid(row=0, column=1, padx=6)
 
         ######### LEGO DATA ###########
@@ -262,7 +272,7 @@ class UserInterface:
         ############################
         amountLabel = Label(portfolioData, text="AMOUNT")
         amountLabel.grid(row=5, column=1, sticky=W, padx=6)
-        amountBox = Spinbox(portfolioData, from_=0, to=25, width=18)
+        amountBox = Spinbox(portfolioData, from_=1, to=25, width=18)
         amountBox.grid(row=6, column=1, padx=7)
         avePriceLabel = Label(portfolioData, text="AVE PRICE")
         avePriceLabel.grid(row=7, column=0, sticky=W, padx=6)
@@ -270,13 +280,15 @@ class UserInterface:
         avePriceBox.grid(row=8, column=0, padx=6)
 
         ############## FOOTER ################
-        takeSetBut = Button(footerFrame, text="Apply")
+        takeSetBut = Button(footerFrame, text="Apply", command= lambda:[self.fill_messagebox(add_purchase_to_db(costbox.get(),dateBox.get(),
+                                                                                           self.shopVar.get(),amountBox.get(),
+                                                                                           self.setIDbox.get(),self.releaseBox.get()))])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
         goBackBut.grid(padx=5, row=0, column=1, pady=6)
 
     def open_stats(self):
-        statsTopWin = Toplevel()
+        statsTopWin = Toplevel(self.root)
         statsTopWin.title("Statistics")
 
         ########### FRAMES ############
@@ -296,7 +308,149 @@ class UserInterface:
         ########### GRAPH ############
         spaceHolder = Label(mainFrame, text="HIER WERDEN SPAETER DIE STATS GEZEIGT")
         spaceHolder.pack(padx=20, pady=100)
-        print(get_shop_list())
+
+    def edit_database(self):
+        topWinDatabase = Toplevel()
+        topWinDatabase.title("DATABASE SETTINGS")
+        tabControl = Notebook(topWinDatabase)
+
+        def callback_theme1(*args):
+            if self.themeVar1.get() == 'Neues Thema anlegen':
+                self.add_theme()
+
+        def callback_shop1(*args):
+            if self.shopVar1.get() == 'Neuen Shop anlegen':
+                self.add_shop()
+
+        ########### FRAMES ################
+
+        setTab = Frame(tabControl)
+        themeTab = Frame(tabControl)
+        # SETs TAB
+        tableFrame = Frame(setTab)
+        tableFrame.grid(row=1, column=0)
+        buttonFrame = Frame(setTab)
+        buttonFrame.grid(row=1, column=1)
+        footerFrame = Frame(setTab)
+        footerFrame.grid(row=2)
+        # Theme TAB
+        tableFrameTh  = Frame(themeTab)
+        tableFrameTh.grid(row=1,column=0)
+        buttonFrameTh = Frame(themeTab)
+        buttonFrameTh.grid(row=1,column=1)
+
+        ########## TAB CONTROLL ###########
+
+        tabControl.add(setTab, text='SETs DB')
+        tabControl.add(themeTab, text='Theme DB')
+        tabControl.pack(expand=1, fill='both')
+
+        ########### SETs TABLE ############
+
+        self.setTree = Treeview(tableFrame)
+        self.setTree.pack()
+        self.setTree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "RELEASE")
+        self.setTree.column("#0", width=0, stretch=NO)  # first column
+        self.setTree.column("ID", anchor=CENTER, width=120, minwidth=25)
+        self.setTree.column("NAME", anchor=CENTER, width=80, minwidth=25)
+        self.setTree.column("THEME", anchor=CENTER, width=124, minwidth=25)
+        self.setTree.column("RETAIL", anchor=CENTER, width=60, minwidth=25)
+        self.setTree.column("RELEASE", anchor=CENTER, width=80, minwidth=25)
+
+        self.setTree.heading("ID", text="SET ID")
+        self.setTree.heading("NAME", text="NAME")
+        self.setTree.heading("THEME", text="THEME")
+        self.setTree.heading("RETAIL", text="RETAIL")
+        self.setTree.heading("RELEASE", text="RELEASE")
+
+        ######### THEME TABLE #############
+
+        self.themeTree = Treeview(tableFrameTh)
+        self.themeTree.pack()
+        self.themeTree['columns'] = ("NAME","SUBTHEME")
+        self.themeTree.column("#0", width=0, stretch=NO)  # first column
+        self.themeTree.column("NAME", anchor=CENTER, width=120, minwidth=25)
+        self.themeTree.column("SUBTHEME", anchor=CENTER, width=120, minwidth=25)
+
+        self.themeTree.heading("NAME", text="NAME")
+        self.themeTree.heading("SUBTHEME", text="SUB THEME")
+
+
+
+        ######### ADD MENUE ###########
+        def add_window():
+            self.entryFrame = Frame(setTab)
+            self.entryFrame.grid(row=1, column=1)
+            menueFrame = Frame(self.entryFrame)
+            menueFrame.grid(row=0, columnspan=2)
+            ######### SEARCH #########
+            sucheLabel1 = Label(menueFrame, text="Suche:")
+            sucheLabel1.grid(row=0, column=0, sticky=W, padx=6)
+            sucheEntry = Entry(menueFrame)
+            sucheEntry.grid(row=0, column=1, padx=6)
+            sucheBut = Button(menueFrame, text="go", height=1,
+                              command=lambda: [self.fill_legoData(sucheEntry.get(), 2), sucheEntry.delete(0, END)])
+            sucheBut.grid(row=0, column=2)
+
+            ######### LEGO DATA ###########
+            # headlineLego = Label(legoData, text="LEGO DATA")
+            # headlineLego.grid(row=0, column=0)
+            self.setIDlabel = Label(self.entryFrame, text="SET ID")
+            self.setIDlabel.grid(row=1, column=0, sticky=W, padx=6)
+            self.setIDbox1 = Entry(self.entryFrame)
+            self.setIDbox1.grid(row=2, column=0, padx=6)
+            self.setNameLabel = Label(self.entryFrame, text="SETNAME")
+            self.setNameLabel.grid(row=1, column=1, sticky=W, padx=6)
+            self.setNameBox1 = Entry(self.entryFrame)
+            self.setNameBox1.grid(row=2, column=1, padx=6)
+            self.retailLabel = Label(self.entryFrame, text="RETAIL PRICE")
+            self.retailLabel.grid(row=3, column=0, sticky=W, padx=6)
+            self.setRetailBox1 = Entry(self.entryFrame)
+            self.setRetailBox1.grid(row=4, column=0, padx=6)
+            ########### THEME ############
+            self.themeLabel = Label(self.entryFrame, text="THEME")
+            self.themeLabel.grid(row=3, column=1, sticky=W, padx=6)
+            self.themeChoices1 = [' ', 'Neues Thema anlegen']
+            for index in get_theme_list():
+                self.themeChoices1.append(index)
+            self.themeVar1 = StringVar()
+            self.themeVar1.set(self.themeChoices1[0])
+            self.themeBox1 = OptionMenu(self.entryFrame, self.themeVar1, *self.themeChoices1)
+            self.themeBox1.config(width=16, borderwidth=1)
+            self.themeBox1.grid(row=4, column=1, padx=6)
+            self.themeVar1.trace("w", callback_theme1)
+            ###############################
+            self.releaseLabel = Label(self.entryFrame, text="RELEASE")
+            self.releaseLabel.grid(row=5, column=0, sticky=W, padx=6)
+            self.releaseBox1 = Entry(self.entryFrame)
+            self.releaseBox1.grid(row=6, column=0, padx=6)
+            self.subThemeLabel = Label(self.entryFrame, text="SUBTHEME")
+            self.subThemeLabel.grid(row=5, column=1, sticky=W, padx=6)
+            self.subThemeBox1 = Entry(self.entryFrame)
+            self.subThemeBox1.grid(row=6, column=1, padx=6)
+
+            bframe = Frame(self.entryFrame)
+            bframe.grid(row=7, columnspan=2)
+            addButton = Button(bframe, text="Add",
+                               command=lambda: [self.fill_messagebox(
+                                   add_set_to_DB(self.setIDbox1.get(), self.setNameBox1.get(), self.setRetailBox1.get(),
+                                                 self.themeVar1.get(), self.releaseBox1.get(), self.subThemeBox1.get()
+                                                 )), self.clear_boxes(2), self.fill_set_table()
+                               ])
+
+            addButton.grid(column=0, pady=5, row=0)
+            closeButton = Button(bframe, text="Close", command=lambda: [self.entryFrame.destroy()])
+            closeButton.grid(column=1, padx=5, row=0)
+
+
+        ######### RIGHT SIDE ##########
+        expand_to_addBut = Button(buttonFrame, text="ADD SET", width=15, command=add_window)
+        expand_to_addBut.grid(row=0, pady=5, padx=10)
+        remove_setBut = Button(buttonFrame, text="REMOVE SET", width=15, command=add_window)
+        remove_setBut.grid(row=1, padx=10)
+
+        self.fill_set_table()
+        self.fill_theme_table()
 
     def add_theme(self):
         newThemeTopWin = Toplevel()
@@ -338,7 +492,7 @@ class UserInterface:
                                          newShopTopWin.destroy()])
         addBut.grid(row=3, columnspan=2, pady=8)
 
-    def fill_legoData(self, setNr):
+    def fill_legoData(self, setNr, win):  # win ist zum identifizieren in welchem fenster der aufruf stattfindet
         dict = get_details_from_web(setNr)
 
         if dict is None:
@@ -347,19 +501,55 @@ class UserInterface:
             messagebox.showerror("Fehler", "Die gesuche SET-Nummer ist nicht vorhanden", parent=rootWin)
             rootWin.destroy()
         else:
-            self.setNameBox.delete(0, END)
-            self.setNameBox.insert(END, dict['Name'])
-            self.setIDbox.delete(0, END)
-            self.setIDbox.insert(END, dict['Setnummer'])
-            self.setRetailBox.delete(0, END)
-            self.setRetailBox.insert(END, dict['UVP'])
-            self.themeVar.set(dict['Thema'])
-            self.themeChoices[0] = dict['Thema']
-            self.releaseBox.delete(0, END)
-            self.releaseBox.insert(END, dict['Erscheinungsjahr'])
+            if win == 1:  # hizu-fenster
+                self.setNameBox.delete(0, END)
+                self.setNameBox.insert(END, dict['Name'])
+                self.setIDbox.delete(0, END)
+                self.setIDbox.insert(END, dict['Setnummer'])
+                self.setRetailBox.delete(0, END)
+                self.setRetailBox.insert(END, dict['UVP'])
+                self.themeVar.set(dict['Thema'])
+                self.themeChoices[0] = dict['Thema']
+                self.releaseBox.delete(0, END)
+                self.releaseBox.insert(END, dict['Erscheinungsjahr'])
+
+            elif win == 2:  # sets database
+                self.setNameBox1.delete(0, END)
+                self.setNameBox1.insert(END, dict['Name'])
+                self.setIDbox1.delete(0, END)
+                self.setIDbox1.insert(END, dict['Setnummer'])
+                self.setRetailBox1.delete(0, END)
+                self.setRetailBox1.insert(END, dict['UVP'])
+                self.themeVar1.set(dict['Thema'])
+                self.themeChoices1[0] = dict['Thema']
+                self.releaseBox1.delete(0, END)
+                self.releaseBox1.insert(END, dict['Erscheinungsjahr'])
 
     def fill_messagebox(self, message):
         self.textInfo.insert(END, message + "\n")
+
+    def clear_boxes(self, win):
+        if win == 2:
+            self.setIDbox1.delete(0, END)
+            self.setNameBox1.delete(0, END)
+            self.setRetailBox1.delete(0, END)
+            self.themeVar1.set("")
+            self.releaseBox1.delete(0, END)
+            self.subThemeBox1.delete(0, END)
+
+    def fill_set_table(self):
+        self.setTree.delete(*self.setTree.get_children())
+        list = get_set_records()
+        for data in list:
+            self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
+
+    def fill_theme_table(self):
+       self.themeTree.delete(*self.themeTree.get_children())
+       list = get_theme_records()
+       for data in list:
+           self.themeTree.insert('','end',values=(data[0],data[1]))
+
+
 
 
 if __name__ == '__main__':
