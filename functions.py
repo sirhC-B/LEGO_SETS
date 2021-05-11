@@ -1,12 +1,10 @@
-
 from bs4 import BeautifulSoup
 import sqlite3
 import requests
 import re
-
-import LEGO
-from LEGO import *
-
+import LEGO_GUI
+import db_conn
+from LEGO_GUI import *
 
 
 def get_details_from_web(set_nr):
@@ -15,7 +13,7 @@ def get_details_from_web(set_nr):
     source = requests.get(url)
     soup = BeautifulSoup(source.text, 'html.parser')
     if source.status_code > 400 or str(set_nr) + " Preisvergleich" in soup.title.string:
-        #print("Die gesuche SET-Nummer ist nicht vorhanden")
+        # print("Die gesuche SET-Nummer ist nicht vorhanden")
         return None
     text = soup.find_all(text=True)
     for index, elem in enumerate(text):
@@ -37,26 +35,31 @@ def get_details_from_web(set_nr):
 
     return details_dict
 
+
 def add_theme_to_DB(themeNameTO, subThemeTO):
     try:
-        db = sqlite3.connect('lego_db')
-        db.cursor()
-        db.execute(f"""INSERT INTO lego_themes(themeName, subTheme) VALUES ("{themeNameTO}","{subThemeTO}"
-                       )""")
+        db = db_conn.db
+        c = db.cursor
+        c.execute(f"""
+        INSERT INTO lego_themes (themeName, subTheme) VALUES ('{themeNameTO}','{subThemeTO}')
+                       """)
         db.commit()
-        text = f"Thema {themeNameTO} erfolgreich in die Datenbank hinzugefuegt."
-    except:
-        text = "Fehler beim anlegen des Themas."
+        db.close()
+        text = f"Thema {themeNameTO} wurde erfolgreich in die Datenbank hinzugefuegt."
+    except Exception as e:
+        text = "Fehler beim anlegen des Themas aufgrunf von {}".format(e)
 
     finally:
         return text
+
 
 def add_shop_to_DB(shopNameTO, urlTO):
     try:
         db = sqlite3.connect('lego_db')
         db.cursor()
-        db.execute(f"""INSERT INTO lego_shops VALUES ("{shopNameTO}","{urlTO}"
-                       )""")
+        db.execute(f"""
+        INSERT INTO lego_shops VALUES ({shopNameTO},{urlTO})
+                       """)
         db.commit()
         text = f"Shop {shopNameTO} erfolgreich in die Datenbank hinzugefuegt."
     except:
@@ -65,17 +68,18 @@ def add_shop_to_DB(shopNameTO, urlTO):
     finally:
         return text
 
-def add_set_to_DB(id,name,retail,theme,release,subtheme):
+
+def add_set_to_DB(id, name, retail, theme, release, subtheme):
     if id:
         try:
             db = sqlite3.connect('lego_db')
             db.cursor()
-            text=""
+            text = ""
             if not theme in get_theme_list() and theme != "" and theme != "Neues Thema anlegen":
-                add_theme_to_DB(theme,subtheme)
-                text=f"Neues Thema '{theme}' wurde hinzugefuegt.\n"
+                add_theme_to_DB(theme, subtheme)
+                text = f"Neues Thema '{theme}' wurde hinzugefuegt.\n"
 
-            db.execute(f"""INSERT INTO main.lego_sets VALUES ("{id}","{name}","{retail}","{release}","{theme}"
+            db.execute(f"""INSERT INTO lego_sets VALUES ("{id}","{name}","{retail}","{release}","{theme}"
                            )""")
             db.commit()
             text = text + f"SET {id} erfolgreich in die Datenbank hinzugefuegt."
@@ -88,10 +92,11 @@ def add_set_to_DB(id,name,retail,theme,release,subtheme):
     else:
         return "Bitte Textfelder fuellen.\n"
 
-def add_purchase_to_db(cost,date,shop,amount,id,retail):
+
+def add_purchase_to_db(cost, date, shop, amount, id, retail):
     if cost:
-        discountE = int(retail)-int(cost)
-        discountP = (1-int(cost)/int(retail))*100
+        discountE = int(retail) - int(cost)
+        discountP = (1 - int(cost) / int(retail)) * 100
 
         try:
             db = sqlite3.connect('lego_db')
@@ -116,7 +121,6 @@ def add_purchase_to_db(cost,date,shop,amount,id,retail):
         return "Bitte Textfelder fuellen.\n"
 
 
-
 def get_shop_list():
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
@@ -127,6 +131,7 @@ def get_shop_list():
         shopList.append(str(index)[2:-3])
 
     return shopList
+
 
 def get_theme_list():
     db = sqlite3.connect('lego_db')
@@ -139,6 +144,7 @@ def get_theme_list():
 
     return themeList
 
+
 def get_set_records():
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
@@ -147,6 +153,7 @@ def get_set_records():
     cursor.close()
 
     return setList
+
 
 def get_theme_records():
     db = sqlite3.connect('lego_db')
