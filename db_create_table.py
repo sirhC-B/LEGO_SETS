@@ -1,20 +1,15 @@
-import db_conn
+#import psycopg2
+import sqlite3
+
+
+
 
 def create_table(db):
     c = db.cursor()
-    c.execute('''SET schema 'lego' ''')
-
-    c.execute('''
-                CREATE TABLE IF NOT EXISTS lego_themes(
-                    themeID SERIAL PRIMARY KEY,
-                    themeName varchar(30) unique not null ,
-                    subTheme varchar(30)
-                );
-                ''')
     c.execute('''
 
                 CREATE TABLE IF NOT EXISTS lego_sets(
-                    setID int NOT NULL unique ,
+                    setID int NOT NULL,
                     setName varchar(30) NOT NULL ,
                     setUvp float,
                     setYear int,
@@ -23,17 +18,24 @@ def create_table(db):
                     FOREIGN KEY (setTheme) REFERENCES lego_themes(themeName)
                 ); 
                 ''')
-
+    c.execute('''
+                
+                CREATE TABLE IF NOT EXISTS lego_themes(
+                    themeID INTEGER PRIMARY KEY AUTOINCREMENT,
+                    themeName varchar(30) NOT NULL ,
+                    subTheme varchar(30)
+                );
+                ''')
     c.execute('''
                 CREATE TABLE IF NOT EXISTS lego_shops(
-                    shopID SERIAL PRIMARY KEY, 
-                    shopName varchar(30) NOT NULL unique ,
-                    shopUrl varchar(80)
+                    shopName varchar(30) NOT NULL ,
+                    shopUrl varchar(80),
+                    PRIMARY KEY (shopName)
                 );
                 ''')
     c.execute('''
                 CREATE TABLE IF NOT EXISTS lego_purchases(
-                    purchaseID SERIAL PRIMARY KEY,
+                    purchaseID INTEGER PRIMARY KEY AUTOINCREMENT,
                     purchasePrice float,
                     purchaseDate date,
                     purchaseDisc float,
@@ -46,8 +48,9 @@ def create_table(db):
                 ''')
 
     db.commit()
-    db.close()
 
 
 if __name__ == '__main__':
-    create_table(db_conn.db)
+    db = sqlite3.connect('lego_db')
+
+    create_table(db)
