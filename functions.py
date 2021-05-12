@@ -1,10 +1,12 @@
+
 from bs4 import BeautifulSoup
 import sqlite3
 import requests
 import re
-import LEGO_GUI
-import db_conn
-from LEGO_GUI import *
+
+import LEGO
+from LEGO import *
+
 
 
 def get_details_from_web(set_nr):
@@ -13,7 +15,7 @@ def get_details_from_web(set_nr):
     source = requests.get(url)
     soup = BeautifulSoup(source.text, 'html.parser')
     if source.status_code > 400 or str(set_nr) + " Preisvergleich" in soup.title.string:
-        # print("Die gesuche SET-Nummer ist nicht vorhanden")
+        #print("Die gesuche SET-Nummer ist nicht vorhanden")
         return None
     text = soup.find_all(text=True)
     for index, elem in enumerate(text):
@@ -35,68 +37,74 @@ def get_details_from_web(set_nr):
 
     return details_dict
 
-
 def add_theme_to_DB(themeNameTO, subThemeTO):
-    try:
-        db = db_conn.db
-        c = db.cursor
-        c.execute(f"""
-        INSERT INTO lego_themes (themeName, subTheme) VALUES ('{themeNameTO}','{subThemeTO}')
-                       """)
-        db.commit()
-        db.close()
-        text = f"Thema {themeNameTO} wurde erfolgreich in die Datenbank hinzugefuegt."
-    except Exception as e:
-        text = "Fehler beim anlegen des Themas aufgrunf von {}".format(e)
-
-    finally:
-        return text
-
-
-def add_shop_to_DB(shopNameTO, urlTO):
-    try:
-        db = sqlite3.connect('lego_db')
-        db.cursor()
-        db.execute(f"""
-        INSERT INTO lego_shops VALUES ({shopNameTO},{urlTO})
-                       """)
-        db.commit()
-        text = f"Shop {shopNameTO} erfolgreich in die Datenbank hinzugefuegt."
-    except:
-        text = "Fehler beim anlegen des Shops."
-
-    finally:
-        return text
-
-
-def add_set_to_DB(id, name, retail, theme, release, subtheme):
-    if id:
+    if themeNameTO:
         try:
             db = sqlite3.connect('lego_db')
             db.cursor()
-            text = ""
-            if not theme in get_theme_list() and theme != "" and theme != "Neues Thema anlegen":
-                add_theme_to_DB(theme, subtheme)
-                text = f"Neues Thema '{theme}' wurde hinzugefuegt.\n"
+            db.execute(f"""INSERT INTO lego_themes(themeName, subTheme) VALUES ("{themeNameTO}","{subThemeTO}"
+                           )""")
+            db.commit()
+            text = f"Thema {themeNameTO} erfolgreich in die Datenbank hinzugefuegt."
+        except:
+            text = "Fehler beim anlegen des Themas."
 
-            db.execute(f"""INSERT INTO lego_sets VALUES ("{id}","{name}","{retail}","{release}","{theme}"
+        finally:
+            return text
+    else:
+        return "Bitte Name des Themas angeben."
+
+def add_shop_to_DB(shopNameTO, urlTO):
+    if shopNameTO:
+        try:
+            db = sqlite3.connect('lego_db')
+            db.cursor()
+            db.execute(f"""INSERT INTO lego_shops VALUES ("{shopNameTO}","{urlTO}"
+                           )""")
+            db.commit()
+            text = f"Shop {shopNameTO} erfolgreich in die Datenbank hinzugefuegt."
+        except:
+            text = "Fehler beim anlegen des Shops."
+
+        finally:
+            return text
+    else:
+        return "Bitte Namen des Shops angeben."
+
+def add_set_to_DB(id,name,retail,theme,release,subtheme):
+    if id and name and retail and theme and release:
+        try:
+            db = sqlite3.connect('lego_db')
+            db.cursor()
+            text=""
+            if not theme in get_theme_list() and theme != "Neues Thema anlegen":
+                add_theme_to_DB(theme,subtheme)
+                text=f"Neues Thema '{theme}' wurde hinzugefuegt.\n"
+
+            db.execute(f"""INSERT INTO main.lego_sets VALUES ("{id}","{name}","{retail[:-2]}","{release}","{theme}"
                            )""")
             db.commit()
             text = text + f"SET {id} erfolgreich in die Datenbank hinzugefuegt."
-        except Exception as e:
-            text = text + "Fehler beim anlegen des Sets."
+
+
+        except sqlite3.IntegrityError as e:
             print(e)
+            text += f"Das Set {id} ist bereits in der Datenbank vorhanden."
+
+        except Exception as e:
+            print(e)
+            text += "Fehler beim anlegen des Sets."
 
         finally:
             return text
     else:
         return "Bitte Textfelder fuellen.\n"
 
-
-def add_purchase_to_db(cost, date, shop, amount, id, retail):
-    if cost:
-        discountE = int(retail) - int(cost)
-        discountP = (1 - int(cost) / int(retail)) * 100
+def add_purchase_to_db(cost,date,shop,amount,id,retail):
+    if cost and id:
+        retail  = float(str(retail).replace(',','.')[:-2])
+        cost = float(str(cost).replace(',', '.'))
+        discountP = round((1-(cost/retail))*100,2)
 
         try:
             db = sqlite3.connect('lego_db')
@@ -111,6 +119,7 @@ def add_purchase_to_db(cost, date, shop, amount, id, retail):
                                )""")
             db.commit()
             text = text + f"Kauf von {id} erfolgreich in das Depot hinzugefuegt."
+
         except Exception as e:
             text = text + "Fehler beim anlegen des Sets."
             print(e)
@@ -119,7 +128,6 @@ def add_purchase_to_db(cost, date, shop, amount, id, retail):
             return text
     else:
         return "Bitte Textfelder fuellen.\n"
-
 
 def get_shop_list():
     db = sqlite3.connect('lego_db')
@@ -132,7 +140,6 @@ def get_shop_list():
 
     return shopList
 
-
 def get_theme_list():
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
@@ -144,7 +151,6 @@ def get_theme_list():
 
     return themeList
 
-
 def get_set_records():
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
@@ -153,6 +159,17 @@ def get_set_records():
     cursor.close()
 
     return setList
+
+def get_purchase_records():
+    db = sqlite3.connect('lego_db')
+    cursor = db.cursor()
+    cursor.execute("""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
+                    purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
+                    JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID""")
+    purchaseList = cursor.fetchall()
+    cursor.close()
+
+    return purchaseList
 
 
 def get_theme_records():
@@ -163,3 +180,21 @@ def get_theme_records():
     cursor.close()
 
     return themeList
+
+def get_shop_records():
+    db = sqlite3.connect('lego_db')
+    cursor = db.cursor()
+    cursor.execute("SELECT shopName,shopUrl FROM lego_shops;")
+    shopList = cursor.fetchall()
+    cursor.close()
+
+    return shopList
+
+def search_for_purchase(iid):
+    db = sqlite3.connect('lego_db')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT * FROM lego_purchases WHERE purchaseID={iid} ")
+    result = cursor.fetchall()
+    cursor.close()
+
+    return result
