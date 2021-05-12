@@ -3,8 +3,8 @@ from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.ttk import Notebook, Treeview
 
-from functions import *
-import sqlite3, db_create_table
+from funktions import *
+import sqlite3, create_db
 
 
 class UserInterface:
@@ -12,25 +12,22 @@ class UserInterface:
     def __init__(self):
         self.root = tkinter.Tk()
         self.root.title('LEGO SETs')
-        w, h = 900, 400
-        ws = self.root.winfo_screenwidth()
-        hs = self.root.winfo_screenheight()
-        x = (ws / 2) - (w / 2)
-        y = (hs / 2) - (h / 2)
-        self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
         ############### FRAMES ##############
-        self.topTapFrame = Frame(self.root, borderwidth=1)
+        self.topTapFrame = Frame(self.root)
         self.topTapFrame.grid(row=0, column=0)
 
         self.treeFrame = Frame(self.root)
         self.treeFrame.grid(row=1, column=0)
 
         self.rightFrame = Frame(self.root)
-        self.rightFrame.grid(row=1, column=1, sticky=N, pady=20)
+        self.rightFrame.grid(row=1, column=1, sticky=N, pady=5, ipadx=10)
+
+        self.checkFrame = Frame(self.root)
+        self.checkFrame.grid(row=2)
 
         self.footerFrame = Frame(self.root)
-        self.footerFrame.grid(row=2, pady=5)
+        self.footerFrame.grid(row=3)
 
         ############# HEADLINE ##############
         self.headline = Label(self.topTapFrame, text="HEADLINE")
@@ -43,7 +40,8 @@ class UserInterface:
         self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8)
         self.Button2.grid(row=1, pady=5)
 
-        self.Button3 = Button(self.rightFrame, text="DETAILS", width=18, pady=8, command=self.open_details)
+        self.Button3 = Button(self.rightFrame, text="DETAILS", width=18, pady=8,
+                              command=lambda: [self.open_details(), self.fill_purchase_details(self.selectItem())])
         self.Button3.grid(row=2)
 
         self.Button4 = Button(self.rightFrame, text="STATISTIC", width=18, pady=8, command=self.open_stats)
@@ -54,18 +52,20 @@ class UserInterface:
 
         ############ TREEVIEW #############
         self.tree = ttk.Treeview(self.treeFrame)
-        self.tree.pack(pady=20, padx=20)
+        self.tree.grid(row=0, pady=5, padx=20)
 
-        self.tree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "COST", "RELEASE", "DATE")
+        self.tree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "COST", "RELEASE", "DATE", "DISCOUNT", "IID")
 
         self.tree.column("#0", width=0, stretch=NO)  # first column
-        self.tree.column("ID", anchor=CENTER, width=120, minwidth=25)
-        self.tree.column("NAME", anchor=CENTER, width=80, minwidth=25)
+        self.tree.column("ID", anchor=CENTER, width=80, minwidth=25)
+        self.tree.column("NAME", anchor=CENTER, width=150, minwidth=25)
         self.tree.column("THEME", anchor=CENTER, width=124, minwidth=25)
         self.tree.column("RETAIL", anchor=CENTER, width=60, minwidth=25)
         self.tree.column("COST", anchor=CENTER, width=60, minwidth=25)
-        self.tree.column("RELEASE", anchor=CENTER, width=80, minwidth=25)
+        self.tree.column("RELEASE", anchor=CENTER, width=60, minwidth=25)
         self.tree.column("DATE", anchor=CENTER, width=90, minwidth=25)
+        self.tree.column("DISCOUNT", anchor=CENTER, width=90, minwidth=25)
+        self.tree.column("IID", anchor=CENTER, width=90, minwidth=25)
 
         # self.tree.heading("#0", text="")  # first column
         self.tree.heading("ID", text="SET ID")
@@ -73,13 +73,37 @@ class UserInterface:
         self.tree.heading("THEME", text="THEME")
         self.tree.heading("RETAIL", text="RETAIL")
         self.tree.heading("COST", text="COST")
-        self.tree.heading("RELEASE", text="RELEASE")
+        self.tree.heading("RELEASE", text="YEAR")
         self.tree.heading("DATE", text="DATE")
+        self.tree.heading("DISCOUNT", text="DISCOUNT")
 
         ############ FOOTER ############
         self.textInfo = Text(self.footerFrame, height=5, width=77)
-        self.textInfo.pack(padx=20)
+        self.textInfo.grid(row=1, padx=20, pady=5)
 
+        dupevar = IntVar()
+        dupecheck = Checkbutton(self.checkFrame, text="Duplicates", variable=dupevar)
+        dupecheck.grid(row=1, pady=3, sticky=W, padx=15)
+        self.datevar = IntVar()
+        datecheck = Checkbutton(self.checkFrame, text="Date", variable=self.datevar,
+                                command=lambda: self.checkbox_function("DATE"))
+        datecheck.grid(row=1, column=2, pady=3, padx=15)
+        self.yearvar = IntVar()
+        yearcheck = Checkbutton(self.checkFrame, text="Year", variable=self.yearvar,
+                                command=lambda: self.checkbox_function("RELEASE"))
+        yearcheck.grid(row=1, column=3, pady=3, padx=15)
+        self.retvar = IntVar()
+        retailcheck = Checkbutton(self.checkFrame, text="Retail", variable=self.retvar,
+                                  command=lambda: self.checkbox_function("RETAIL"))
+        retailcheck.grid(row=1, column=4, pady=3, padx=15)
+        self.discvar = IntVar()
+        disccheck = Checkbutton(self.checkFrame, text="Discount", variable=self.discvar,
+                                command=lambda: self.checkbox_function("DISCOUNT"))
+        disccheck.grid(row=1, column=5, pady=3, padx=15)
+
+        self.columnlist = ["ID", "NAME", "THEME", "COST"]
+        self.tree["displaycolumns"] = self.columnlist
+        self.fill_purchase_table()
         self.root.mainloop()
 
     def open_details(self):
@@ -280,9 +304,13 @@ class UserInterface:
         avePriceBox.grid(row=8, column=0, padx=6)
 
         ############## FOOTER ################
-        takeSetBut = Button(footerFrame, text="Apply", command= lambda:[self.fill_messagebox(add_purchase_to_db(costbox.get(),dateBox.get(),
-                                                                                           self.shopVar.get(),amountBox.get(),
-                                                                                           self.setIDbox.get(),self.releaseBox.get()))])
+        takeSetBut = Button(footerFrame, text="Apply",
+                            command=lambda: [self.fill_messagebox(add_purchase_to_db(costbox.get(), dateBox.get(),
+                                                                                     self.shopVar.get(),
+                                                                                     amountBox.get(),
+                                                                                     self.setIDbox.get(),
+                                                                                     self.setRetailBox.get())),
+                                             self.fill_purchase_table()])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
         goBackBut.grid(padx=5, row=0, column=1, pady=6)
@@ -310,22 +338,21 @@ class UserInterface:
         spaceHolder.pack(padx=20, pady=100)
 
     def edit_database(self):
+
+        def update_tables():
+            self.fill_set_table()
+            self.fill_theme_table()
+            self.fill_shop_table()
+
         topWinDatabase = Toplevel()
         topWinDatabase.title("DATABASE SETTINGS")
         tabControl = Notebook(topWinDatabase)
-
-        def callback_theme1(*args):
-            if self.themeVar1.get() == 'Neues Thema anlegen':
-                self.add_theme()
-
-        def callback_shop1(*args):
-            if self.shopVar1.get() == 'Neuen Shop anlegen':
-                self.add_shop()
 
         ########### FRAMES ################
 
         setTab = Frame(tabControl)
         themeTab = Frame(tabControl)
+        shopTab = Frame(tabControl)
         # SETs TAB
         tableFrame = Frame(setTab)
         tableFrame.grid(row=1, column=0)
@@ -334,15 +361,20 @@ class UserInterface:
         footerFrame = Frame(setTab)
         footerFrame.grid(row=2)
         # Theme TAB
-        tableFrameTh  = Frame(themeTab)
-        tableFrameTh.grid(row=1,column=0)
-        buttonFrameTh = Frame(themeTab)
-        buttonFrameTh.grid(row=1,column=1)
-
+        tableFrameTh = Frame(themeTab)
+        tableFrameTh.grid(row=1, column=0)
+        buttonFrameTh = Frame(themeTab, width=60)
+        buttonFrameTh.grid(row=1, column=1)
+        # Shop Tab
+        tableFrameSh = Frame(shopTab)
+        tableFrameSh.grid(row=1, column=0)
+        buttonFrameSh = Frame(shopTab)
+        buttonFrameSh.grid(row=1, column=1)
         ########## TAB CONTROLL ###########
 
         tabControl.add(setTab, text='SETs DB')
         tabControl.add(themeTab, text='Theme DB')
+        tabControl.add(shopTab, text='Shop DB')
         tabControl.pack(expand=1, fill='both')
 
         ########### SETs TABLE ############
@@ -351,8 +383,8 @@ class UserInterface:
         self.setTree.pack()
         self.setTree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "RELEASE")
         self.setTree.column("#0", width=0, stretch=NO)  # first column
-        self.setTree.column("ID", anchor=CENTER, width=120, minwidth=25)
-        self.setTree.column("NAME", anchor=CENTER, width=80, minwidth=25)
+        self.setTree.column("ID", anchor=CENTER, width=80, minwidth=25)
+        self.setTree.column("NAME", anchor=CENTER, width=125, minwidth=25)
         self.setTree.column("THEME", anchor=CENTER, width=124, minwidth=25)
         self.setTree.column("RETAIL", anchor=CENTER, width=60, minwidth=25)
         self.setTree.column("RELEASE", anchor=CENTER, width=80, minwidth=25)
@@ -367,15 +399,24 @@ class UserInterface:
 
         self.themeTree = Treeview(tableFrameTh)
         self.themeTree.pack()
-        self.themeTree['columns'] = ("NAME","SUBTHEME")
+        self.themeTree['columns'] = ("NAME", "SUBTHEME")
         self.themeTree.column("#0", width=0, stretch=NO)  # first column
-        self.themeTree.column("NAME", anchor=CENTER, width=120, minwidth=25)
-        self.themeTree.column("SUBTHEME", anchor=CENTER, width=120, minwidth=25)
+        self.themeTree.column("NAME", anchor=CENTER, width=175, minwidth=25)
+        self.themeTree.column("SUBTHEME", anchor=CENTER, width=175, minwidth=25)
 
         self.themeTree.heading("NAME", text="NAME")
         self.themeTree.heading("SUBTHEME", text="SUB THEME")
 
+        ######### SHOP TABLE #############
 
+        self.shopTree = Treeview(tableFrameSh)
+        self.shopTree.pack()
+        self.shopTree['columns'] = ("NAME", "URL")
+        self.shopTree.column("#0", width=0, stretch=NO)  # first column
+        self.shopTree.column("NAME", anchor=CENTER, width=120, minwidth=25)
+        self.shopTree.column("URL", anchor=CENTER, width=230, minwidth=25)
+        self.shopTree.heading("NAME", text="NAME")
+        self.shopTree.heading("URL", text="URL")
 
         ######### ADD MENUE ###########
         def add_window():
@@ -393,8 +434,6 @@ class UserInterface:
             sucheBut.grid(row=0, column=2)
 
             ######### LEGO DATA ###########
-            # headlineLego = Label(legoData, text="LEGO DATA")
-            # headlineLego.grid(row=0, column=0)
             self.setIDlabel = Label(self.entryFrame, text="SET ID")
             self.setIDlabel.grid(row=1, column=0, sticky=W, padx=6)
             self.setIDbox1 = Entry(self.entryFrame)
@@ -410,15 +449,8 @@ class UserInterface:
             ########### THEME ############
             self.themeLabel = Label(self.entryFrame, text="THEME")
             self.themeLabel.grid(row=3, column=1, sticky=W, padx=6)
-            self.themeChoices1 = [' ', 'Neues Thema anlegen']
-            for index in get_theme_list():
-                self.themeChoices1.append(index)
-            self.themeVar1 = StringVar()
-            self.themeVar1.set(self.themeChoices1[0])
-            self.themeBox1 = OptionMenu(self.entryFrame, self.themeVar1, *self.themeChoices1)
-            self.themeBox1.config(width=16, borderwidth=1)
+            self.themeBox1 = Entry(self.entryFrame)
             self.themeBox1.grid(row=4, column=1, padx=6)
-            self.themeVar1.trace("w", callback_theme1)
             ###############################
             self.releaseLabel = Label(self.entryFrame, text="RELEASE")
             self.releaseLabel.grid(row=5, column=0, sticky=W, padx=6)
@@ -434,23 +466,75 @@ class UserInterface:
             addButton = Button(bframe, text="Add",
                                command=lambda: [self.fill_messagebox(
                                    add_set_to_DB(self.setIDbox1.get(), self.setNameBox1.get(), self.setRetailBox1.get(),
-                                                 self.themeVar1.get(), self.releaseBox1.get(), self.subThemeBox1.get()
-                                                 )), self.clear_boxes(2), self.fill_set_table()
+                                                 self.themeBox1.get(), self.releaseBox1.get(), self.subThemeBox1.get()
+                                                 )), self.clear_boxes(2), update_tables()
                                ])
 
             addButton.grid(column=0, pady=5, row=0)
             closeButton = Button(bframe, text="Close", command=lambda: [self.entryFrame.destroy()])
             closeButton.grid(column=1, padx=5, row=0)
 
+        def add_window_th():
+            add_thFrame = Frame(themeTab)
+            add_thFrame.grid(row=1, column=1)
+            nameLabel = Label(add_thFrame, text="NAME")
+            nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=25)
+            nameBox = Entry(add_thFrame)
+            nameBox.grid(row=1, column=0, padx=25)
+            subLabel = Label(add_thFrame, text="SUB THEME")
+            subLabel.grid(row=2, column=0, pady=5, sticky=W, padx=25)
+            subBox = Entry(add_thFrame)
+            subBox.grid(row=3, column=0, padx=5)
+            subButFrame = Frame(add_thFrame)
+            subButFrame.grid(row=4)
+            addBut = Button(subButFrame, text="Add",
+                            command=lambda: [self.fill_messagebox(add_theme_to_DB(nameBox.get(), subBox.get())),
+                                             nameBox.delete(0, END), subBox.delete(0, END), update_tables()
+                                             ])
+            addBut.grid(row=0, column=0, pady=8, padx=5)
+            closeBut = Button(subButFrame, text="Close", command=add_thFrame.destroy)
+            closeBut.grid(row=0, column=1)
 
-        ######### RIGHT SIDE ##########
+        def add_window_sh():
+            add_shFrame = Frame(shopTab)
+            add_shFrame.grid(row=1, column=1)
+            nameLabel = Label(add_shFrame, text="NAME")
+            nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=25)
+            nameBox = Entry(add_shFrame)
+            nameBox.grid(row=1, column=0, padx=25)
+            urlLabel = Label(add_shFrame, text="URL")
+            urlLabel.grid(row=2, column=0, pady=5, sticky=W, padx=25)
+            urlBox = Entry(add_shFrame)
+            urlBox.grid(row=3, column=0, padx=5)
+            subButFrame = Frame(add_shFrame)
+            subButFrame.grid(row=4)
+            addBut = Button(subButFrame, text="Add", command=lambda: [self.fill_messagebox(add_shop_to_DB(nameBox.get(),
+                                                                                                          urlBox.get())),
+                                                                      nameBox.delete(0, END), urlBox.delete(0, END),
+                                                                      update_tables()
+                                                                      ])
+            addBut.grid(row=0, column=0, pady=8, padx=5)
+            closeBut = Button(subButFrame, text="Close", command=add_shFrame.destroy)
+            closeBut.grid(row=0, column=1)
+
+        ######### BUTTONS ##########
+        # Sets
         expand_to_addBut = Button(buttonFrame, text="ADD SET", width=15, command=add_window)
         expand_to_addBut.grid(row=0, pady=5, padx=10)
         remove_setBut = Button(buttonFrame, text="REMOVE SET", width=15, command=add_window)
         remove_setBut.grid(row=1, padx=10)
+        # Themes
+        expand_to_add_ThBut = Button(buttonFrameTh, text="ADD THEME", width=15, command=add_window_th)
+        expand_to_add_ThBut.grid(row=0, pady=5, padx=15)
+        remove_thBut = Button(buttonFrameTh, text="REMOVE THEME", width=15)
+        remove_thBut.grid(row=1, padx=15)
+        # Shop
+        expand_to_add_shBut = Button(buttonFrameSh, text="ADD SHOP", width=15, command=add_window_sh)
+        expand_to_add_shBut.grid(row=0, pady=5, padx=15)
+        remove_shBut = Button(buttonFrameSh, text="REMOVE SHOP", width=15)
+        remove_shBut.grid(row=1, padx=15)
 
-        self.fill_set_table()
-        self.fill_theme_table()
+        update_tables()
 
     def add_theme(self):
         newThemeTopWin = Toplevel()
@@ -496,10 +580,8 @@ class UserInterface:
         dict = get_details_from_web(setNr)
 
         if dict is None:
-            rootWin = Tk()
-            rootWin.withdraw()
-            messagebox.showerror("Fehler", "Die gesuche SET-Nummer ist nicht vorhanden", parent=rootWin)
-            rootWin.destroy()
+            self.fill_messagebox("Die gesuche SET-Nummer ist nicht vorhanden")
+
         else:
             if win == 1:  # hizu-fenster
                 self.setNameBox.delete(0, END)
@@ -520,10 +602,34 @@ class UserInterface:
                 self.setIDbox1.insert(END, dict['Setnummer'])
                 self.setRetailBox1.delete(0, END)
                 self.setRetailBox1.insert(END, dict['UVP'])
-                self.themeVar1.set(dict['Thema'])
-                self.themeChoices1[0] = dict['Thema']
+                self.themeBox1.delete(0, END)
+                self.themeBox1.insert(END, dict['Thema'])
                 self.releaseBox1.delete(0, END)
                 self.releaseBox1.insert(END, dict['Erscheinungsjahr'])
+
+            elif win == 3:  # details
+                self.setNameBox.delete(0, END)
+                self.setNameBox.insert(END, dict['Name'])
+                self.setIDbox.delete(0, END)
+                self.setIDbox.insert(END, dict['Setnummer'])
+                self.setRetailBox.delete(0, END)
+                self.setRetailBox.insert(END, dict['UVP'])
+                self.themeBox.delete(0, END)
+                self.themeBox.insert(END, dict['Thema'])
+                self.releaseBox.delete(0, END)
+                self.releaseBox.insert(END, dict['Erscheinungsjahr'])
+
+    def fill_purchase_details(self, values):
+        self.fill_legoData(values[0], 3)
+        self.clear_boxes(3)
+        list = search_for_purchase(values[8])
+        for data in list:
+            self.costbox.insert(END, str(data[1]) + " €")
+            self.dateBox.insert(END, data[2])
+            self.discountBox.insert(END, str(data[3]) + " %")
+            self.shopBox.insert(END, data[6])
+            self.amountBox.insert(END, data[4])
+        print(search_for_purchase(values[8]))
 
     def fill_messagebox(self, message):
         self.textInfo.insert(END, message + "\n")
@@ -533,26 +639,61 @@ class UserInterface:
             self.setIDbox1.delete(0, END)
             self.setNameBox1.delete(0, END)
             self.setRetailBox1.delete(0, END)
-            self.themeVar1.set("")
+            self.themeBox1.delete(0, END)
             self.releaseBox1.delete(0, END)
             self.subThemeBox1.delete(0, END)
+        elif win == 3:
+            self.costbox.delete(0, END)
+            self.dateBox.delete(0, END)
+            self.discountBox.delete(0, END)
+            self.discount1Box.delete(0, END)
+            self.shopBox.delete(0, END)
+            self.amountBox.delete(0, END)
+            self.avePriceBox.delete(0, END)
 
     def fill_set_table(self):
         self.setTree.delete(*self.setTree.get_children())
         list = get_set_records()
         for data in list:
-            self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
+            self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3] + " €", data[4]))
 
     def fill_theme_table(self):
-       self.themeTree.delete(*self.themeTree.get_children())
-       list = get_theme_records()
-       for data in list:
-           self.themeTree.insert('','end',values=(data[0],data[1]))
+        self.themeTree.delete(*self.themeTree.get_children())
+        list = get_theme_records()
+        for data in list:
+            self.themeTree.insert('', 'end', values=(data[0], data[1]))
 
+    def fill_shop_table(self):
+        self.shopTree.delete(*self.shopTree.get_children())
+        list = get_shop_records()
+        for data in list:
+            self.shopTree.insert('', 'end', values=(data[0], data[1]))
 
+    def fill_purchase_table(self):
+        self.tree.delete(*self.tree.get_children())
+        list = get_purchase_records()
+        for data in list:
+            self.tree.insert('', 'end',
+                             values=(
+                                 data[4], data[6], data[7], str(data[8]) + "€", str(data[0]) + "€", data[9], data[1],
+                                 str(data[10]) + "%", data[11]))
+
+    def checkbox_function(self, var):
+        if var not in self.columnlist:
+            self.columnlist.append(var)
+            self.tree["displaycolumns"] = self.columnlist
+
+        elif var in self.columnlist:
+            self.columnlist.remove(var)
+            self.tree["displaycolumns"] = self.columnlist
+
+    def selectItem(self):
+        curItem = self.tree.focus()
+        print(self.tree.item(curItem)['values'])
+        return self.tree.item(curItem)['values']
 
 
 if __name__ == '__main__':
     db = sqlite3.connect('lego_db')
-    db_create_table.create_table(db)
+    create_db.create_table(db)
     gui = UserInterface()
