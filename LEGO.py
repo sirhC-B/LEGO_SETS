@@ -309,7 +309,11 @@ class UserInterface:
                                                                                      self.shopVar.get(),
                                                                                      amountBox.get(),
                                                                                      self.setIDbox.get(),
-                                                                                     self.setRetailBox.get())),
+                                                                                     self.setRetailBox.get(),
+                                                                                     self.setNameBox.get(),
+                                                                                     self.themeVar.get(),
+                                                                                     self.releaseBox.get(),
+                                                                                     self.subThemeBox.get())),
                                              self.fill_purchase_table()])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
