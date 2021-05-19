@@ -2,6 +2,7 @@ import tkinter
 from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.ttk import Notebook, Treeview
+import datetime
 
 from funktions import *
 import sqlite3, create_db
@@ -11,7 +12,7 @@ class UserInterface:
 
     def __init__(self):
         self.root = tkinter.Tk()
-        self.root.title('LEGO SETs')
+        self.root.title(' ')
 
         ############### FRAMES ##############
         self.topTapFrame = Frame(self.root)
@@ -21,7 +22,7 @@ class UserInterface:
         self.treeFrame.grid(row=1, column=0)
 
         self.rightFrame = Frame(self.root)
-        self.rightFrame.grid(row=1, column=1, sticky=N, pady=5, ipadx=10)
+        self.rightFrame.grid(row=1, column=1, sticky=N, pady=5, ipadx=10, padx=(10, 0))
 
         self.checkFrame = Frame(self.root)
         self.checkFrame.grid(row=2)
@@ -30,14 +31,15 @@ class UserInterface:
         self.footerFrame.grid(row=3)
 
         ############# HEADLINE ##############
-        self.headline = Label(self.topTapFrame, text="HEADLINE")
-        self.headline.pack()
+        self.headline = Label(self.topTapFrame, text="LEGO DEPOT")
+        self.headline.pack(pady=5)
 
         ############ BUTTONS ###########
         self.Button1 = Button(self.rightFrame, text="HINZU", width=18, pady=8, command=self.add_record)
         self.Button1.grid(row=0)
 
-        self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8)
+        self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8,
+                              command=lambda: [self.delete_purchase(self.selectItem()), self.fill_purchase_table(NONE)])
         self.Button2.grid(row=1, pady=5)
 
         self.Button3 = Button(self.rightFrame, text="DETAILS", width=18, pady=8,
@@ -51,8 +53,26 @@ class UserInterface:
         self.Button5.grid(row=4)
 
         ############ TREEVIEW #############
+
         self.tree = ttk.Treeview(self.treeFrame)
-        self.tree.grid(row=0, pady=5, padx=20)
+        self.tree.grid(row=0, column=0, pady=5, padx=(20, 0))
+        style = ttk.Style()
+        style.theme_use('default')
+        style.configure("Treeview",
+                        background="#D3D3D3",
+                        foreground="black",
+                        rowheight=25,
+                        fieldbackground="white")
+        style.map('Treeview', background=[('selected', "#347083")])
+
+        def show_scrollbar():
+            if dupevar.get() == 1:
+                self.vsb = ttk.Scrollbar(self.treeFrame, orient="vertical", command=self.tree.yview)
+                self.vsb.grid(row=0, column=1, sticky=S + E + N, pady=5, padx=(0, 10))
+                self.tree.configure(yscrollcommand=self.vsb.set)
+            else:
+                self.tree.configure(yscrollcommand="")
+                self.vsb.destroy()
 
         self.tree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "COST", "RELEASE", "DATE", "DISCOUNT", "IID")
 
@@ -60,7 +80,7 @@ class UserInterface:
         self.tree.column("ID", anchor=CENTER, width=80, minwidth=25)
         self.tree.column("NAME", anchor=CENTER, width=150, minwidth=25)
         self.tree.column("THEME", anchor=CENTER, width=124, minwidth=25)
-        self.tree.column("RETAIL", anchor=CENTER, width=60, minwidth=25)
+        self.tree.column("RETAIL", anchor=CENTER, width=65, minwidth=25)
         self.tree.column("COST", anchor=CENTER, width=60, minwidth=25)
         self.tree.column("RELEASE", anchor=CENTER, width=60, minwidth=25)
         self.tree.column("DATE", anchor=CENTER, width=90, minwidth=25)
@@ -68,21 +88,21 @@ class UserInterface:
         self.tree.column("IID", anchor=CENTER, width=90, minwidth=25)
 
         # self.tree.heading("#0", text="")  # first column
-        self.tree.heading("ID", text="SET ID")
-        self.tree.heading("NAME", text="NAME")
-        self.tree.heading("THEME", text="THEME")
-        self.tree.heading("RETAIL", text="RETAIL")
-        self.tree.heading("COST", text="COST")
-        self.tree.heading("RELEASE", text="YEAR")
-        self.tree.heading("DATE", text="DATE")
-        self.tree.heading("DISCOUNT", text="DISCOUNT")
+        self.tree.heading("ID", text="SET ID", command=lambda: self.fill_purchase_table("setID"))
+        self.tree.heading("NAME", text="NAME", command=lambda: self.fill_purchase_table("setName"))
+        self.tree.heading("THEME", text="THEME", command=lambda: self.fill_purchase_table("setTheme"))
+        self.tree.heading("RETAIL", text="RETAIL", command=lambda: self.fill_purchase_table("setUvp"))
+        self.tree.heading("COST", text="COST", command=lambda: self.fill_purchase_table("purchasePrice"))
+        self.tree.heading("RELEASE", text="YEAR", command=lambda: self.fill_purchase_table("setYear"))
+        self.tree.heading("DATE", text="DATE", command=lambda: self.fill_purchase_table("purchaseDate"))
+        self.tree.heading("DISCOUNT", text="DISCOUNT", command=lambda: self.fill_purchase_table("purchaseDisc"))
 
         ############ FOOTER ############
         self.textInfo = Text(self.footerFrame, height=5, width=77)
         self.textInfo.grid(row=1, padx=20, pady=5)
-
+        # checkboxes
         dupevar = IntVar()
-        dupecheck = Checkbutton(self.checkFrame, text="Duplicates", variable=dupevar)
+        dupecheck = Checkbutton(self.checkFrame, text="Show Scrollbar", variable=dupevar, command=show_scrollbar)
         dupecheck.grid(row=1, pady=3, sticky=W, padx=15)
         self.datevar = IntVar()
         datecheck = Checkbutton(self.checkFrame, text="Date", variable=self.datevar,
@@ -101,9 +121,13 @@ class UserInterface:
                                 command=lambda: self.checkbox_function("DISCOUNT"))
         disccheck.grid(row=1, column=5, pady=3, padx=15)
 
+        # dynamic columns
         self.columnlist = ["ID", "NAME", "THEME", "COST"]
         self.tree["displaycolumns"] = self.columnlist
-        self.fill_purchase_table()
+        # doubleclick event
+        self.tree.bind('<Double-Button-1>', self.double_click)
+        # update table
+        self.fill_purchase_table(NONE)
         self.root.mainloop()
 
     def open_details(self):
@@ -121,8 +145,8 @@ class UserInterface:
         self.footerFrame.grid(row=2, column=0, columnspan=2, padx=5)
 
         ######### TOP LINE ############
-        self.topLabel = Label(self.headFrame, text="SETNAME ODER BILD")
-        self.topLabel.grid()
+        self.topLabel = Label(self.headFrame, text=" ")
+        # self.topLabel.grid()
 
         ######### LEGO DATA ###########
         # self.headlineLego = Label(self.legoData, text="LEGO DATA")
@@ -273,6 +297,7 @@ class UserInterface:
         dateLabel.grid(row=1, column=1, sticky=W, padx=6)
         dateBox = Entry(portfolioData)
         dateBox.grid(row=2, column=1, padx=6)
+        dateBox.insert(0, datetime.date.today().strftime("%d.%m.%Y"))
         discountLabel = Label(portfolioData, text="DISCOUNT")
         discountLabel.grid(row=3, column=0, sticky=W, padx=6)
         discountBox = Entry(portfolioData)
@@ -305,7 +330,9 @@ class UserInterface:
 
         ############## FOOTER ################
         takeSetBut = Button(footerFrame, text="Apply",
-                            command=lambda: [self.fill_messagebox(add_purchase_to_db(costbox.get(), dateBox.get(),
+                            command=lambda: [self.fill_messagebox(add_purchase_to_db(costbox.get(),
+                                                                                     # self.format_date(dateBox.get()),
+                                                                                     dateBox.get(),
                                                                                      self.shopVar.get(),
                                                                                      amountBox.get(),
                                                                                      self.setIDbox.get(),
@@ -314,7 +341,8 @@ class UserInterface:
                                                                                      self.themeVar.get(),
                                                                                      self.releaseBox.get(),
                                                                                      self.subThemeBox.get())),
-                                             self.fill_purchase_table()])
+                                             self.fill_purchase_table(NONE), costbox.delete(0, END),
+                                             dateBox.delete(0, END)])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
         goBackBut.grid(padx=5, row=0, column=1, pady=6)
@@ -624,16 +652,23 @@ class UserInterface:
                 self.releaseBox.insert(END, dict['Erscheinungsjahr'])
 
     def fill_purchase_details(self, values):
-        self.fill_legoData(values[0], 3)
-        self.clear_boxes(3)
-        list = search_for_purchase(values[8])
-        for data in list:
-            self.costbox.insert(END, str(data[1]) + " €")
-            self.dateBox.insert(END, data[2])
-            self.discountBox.insert(END, str(data[3]) + " %")
-            self.shopBox.insert(END, data[6])
-            self.amountBox.insert(END, data[4])
-        print(search_for_purchase(values[8]))
+        try:
+            self.fill_legoData(values[0], 3)
+            self.clear_boxes(3)
+            list = search_for_purchase(values[8])
+            for data in list:
+                self.costbox.insert(END, str(data[1]) + " €")
+                self.dateBox.insert(END, data[2])
+                self.discountBox.insert(END, str(data[3]) + " %")
+                self.shopBox.insert(END, data[6])
+                self.amountBox.insert(END, data[4])
+            dis = float(self.discountBox.get()[:-2]) / 100 * float(str(self.setRetailBox.get()[:-2]).replace(',', '.'))
+            self.discount1Box.insert(END, str(round(dis, 2)) + " €")
+
+        except Exception as e:
+            print(e)
+            self.topWinDetails.destroy()
+            self.fill_messagebox("Bitte waehlen sie einen Eintrag aus.")
 
     def fill_messagebox(self, message):
         self.textInfo.insert(END, message + "\n")
@@ -656,31 +691,70 @@ class UserInterface:
             self.avePriceBox.delete(0, END)
 
     def fill_set_table(self):
+        global count
+        count = 0
         self.setTree.delete(*self.setTree.get_children())
+        self.setTree.tag_configure('oddrow', background="grey85")
+        self.setTree.tag_configure('evenrow', background="white")
         list = get_set_records()
         for data in list:
-            self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3] + " €", data[4]))
+            if count % 2 == 0:
+                self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3] + " €", data[4]),
+                                    tags=('evenrow',))
+            else:
+                self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3] + " €", data[4]),
+                                    tags=('oddrow',))
+            count += 1
 
     def fill_theme_table(self):
+        global count
+        count = 0
         self.themeTree.delete(*self.themeTree.get_children())
+        self.themeTree.tag_configure('oddrow', background="grey85")
+        self.themeTree.tag_configure('evenrow', background="white")
         list = get_theme_records()
         for data in list:
-            self.themeTree.insert('', 'end', values=(data[0], data[1]))
+            if count % 2 == 0:
+                self.themeTree.insert('', 'end', values=(data[0], data[1]), tags=('evenrow',))
+            else:
+                self.themeTree.insert('', 'end', values=(data[0], data[1]), tags=('oddrow',))
+            count += 1
 
     def fill_shop_table(self):
+        global count
+        count = 0
         self.shopTree.delete(*self.shopTree.get_children())
+        self.shopTree.tag_configure('oddrow', background="grey85")
+        self.shopTree.tag_configure('evenrow', background="white")
         list = get_shop_records()
         for data in list:
-            self.shopTree.insert('', 'end', values=(data[0], data[1]))
+            if count % 2 == 0:
+                self.shopTree.insert('', 'end', values=(data[0], data[1]), tags=('evenrow',))
+            else:
+                self.shopTree.insert('', 'end', values=(data[0], data[1]), tags=('oddrow',))
+            count += 1
 
-    def fill_purchase_table(self):
+    def fill_purchase_table(self, order):
+        global count
+        count = 0
         self.tree.delete(*self.tree.get_children())
-        list = get_purchase_records()
+        self.tree.tag_configure('oddrow', background="grey85")
+        self.tree.tag_configure('evenrow', background="white")
+        list = get_purchase_records(order)
         for data in list:
-            self.tree.insert('', 'end',
-                             values=(
-                                 data[4], data[6], data[7], str(data[8]) + "€", str(data[0]) + "€", data[9], data[1],
-                                 str(data[10]) + "%", data[11]))
+            if count % 2 == 0:
+                self.tree.insert('', 'end',
+                                 values=(
+                                     data[4], data[6], data[7], str(data[8]) + "€", str(data[0]) + "€", data[9],
+                                     data[1],
+                                     str(data[10]) + "%", data[11]), tags=('evenrow',))
+            else:
+                self.tree.insert('', 'end',
+                                 values=(
+                                     data[4], data[6], data[7], str(data[8]) + "€", str(data[0]) + "€", data[9],
+                                     data[1],
+                                     str(data[10]) + "%", data[11]), tags=('oddrow',))
+            count += 1
 
     def checkbox_function(self, var):
         if var not in self.columnlist:
@@ -691,10 +765,27 @@ class UserInterface:
             self.columnlist.remove(var)
             self.tree["displaycolumns"] = self.columnlist
 
+    def delete_purchase(self, values):
+        try:
+            self.fill_messagebox(delete_purchase_from_db(int(values[8])))
+        except Exception as e:
+            print(e)
+            self.fill_messagebox("Bitte Eintrag zum loeschen waehlen.")
+
     def selectItem(self):
         curItem = self.tree.focus()
         print(self.tree.item(curItem)['values'])
         return self.tree.item(curItem)['values']
+
+    def double_click(self, event):
+        self.open_details()
+        self.fill_purchase_details(self.selectItem())
+
+    # def format_date(self,date):
+    # datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
+    # datetimeobject = datetimeobject.strftime('%Y-%m-%d')
+    # print(datetimeobject)
+    # return datetimeobject
 
 
 if __name__ == '__main__':
