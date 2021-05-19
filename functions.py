@@ -103,7 +103,7 @@ def add_set_to_DB(id, name, retail, theme, release, subtheme):
 
 
 def add_purchase_to_db(cost, date, shop, amount, id, retail, name, theme, release, subtheme):
-    if cost and id:
+    if cost and id and name:
         text = ""
         if id not in get_set_list():
             print(get_set_list())
@@ -182,12 +182,13 @@ def get_set_records():
     return setList
 
 
-def get_purchase_records():
+def get_purchase_records(order="purchaseID"):
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
-    cursor.execute("""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
-                    purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
-                    JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID""")
+    cursor.execute(f"""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
+                    purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases 
+                    JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+                    ORDER BY"{order}" """)
     purchaseList = cursor.fetchall()
     cursor.close()
 
@@ -213,11 +214,21 @@ def get_shop_records():
 
     return shopList
 
+def delete_purchase_from_db(iid):
+    try:
+        db = sqlite3.connect('lego_db')
+        db.execute(f"""DELETE FROM main.lego_purchases WHERE purchaseID="{iid}"; """)
+        db.commit()
+    except Exception as e:
+        print(e)
+        return ("Fehler beim loeschen des Sets.")
+
+    return("Set wurde erfolgreich entfernt.")
 
 def search_for_purchase(iid):
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM lego_purchases WHERE purchaseID={iid} ")
+    cursor.execute(f"SELECT * FROM lego_purchases WHERE purchaseID={iid}; ")
     result = cursor.fetchall()
     cursor.close()
 
