@@ -13,6 +13,7 @@ class UserInterface:
     def __init__(self):
         self.root = tkinter.Tk()
         self.root.title(' ')
+        self.root.geometry('990x500')
 
         ############### FRAMES ##############
         self.topTapFrame = Frame(self.root)
@@ -22,7 +23,7 @@ class UserInterface:
         self.treeFrame.grid(row=1, column=0)
 
         self.rightFrame = Frame(self.root)
-        self.rightFrame.grid(row=1, column=1, sticky=N, pady=5, ipadx=10, padx=(10, 0))
+        self.rightFrame.grid(row=1, column=1, sticky=N, pady=5, ipadx=10, padx=(10, 10))
 
         self.checkFrame = Frame(self.root)
         self.checkFrame.grid(row=2)
@@ -98,7 +99,7 @@ class UserInterface:
         self.tree.heading("DISCOUNT", text="DISCOUNT", command=lambda: self.fill_purchase_table("purchaseDisc"))
 
         ############ FOOTER ############
-        self.textInfo = Text(self.footerFrame, height=5, width=77)
+        self.textInfo = Text(self.footerFrame, height=7, width=90)
         self.textInfo.grid(row=1, padx=20, pady=5)
         # checkboxes
         dupevar = IntVar()
@@ -113,16 +114,18 @@ class UserInterface:
                                 command=lambda: self.checkbox_function("RELEASE"))
         yearcheck.grid(row=1, column=3, pady=3, padx=15)
         self.retvar = IntVar()
+        self.retvar.set(1)
         retailcheck = Checkbutton(self.checkFrame, text="Retail", variable=self.retvar,
                                   command=lambda: self.checkbox_function("RETAIL"))
         retailcheck.grid(row=1, column=4, pady=3, padx=15)
         self.discvar = IntVar()
+        self.discvar.set(1)
         disccheck = Checkbutton(self.checkFrame, text="Discount", variable=self.discvar,
                                 command=lambda: self.checkbox_function("DISCOUNT"))
         disccheck.grid(row=1, column=5, pady=3, padx=15)
 
         # dynamic columns
-        self.columnlist = ["ID", "NAME", "THEME", "COST"]
+        self.columnlist = ["ID", "NAME", "THEME", "COST","RETAIL","DISCOUNT"]
         self.tree["displaycolumns"] = self.columnlist
         # doubleclick event
         self.tree.bind('<Double-Button-1>', self.double_click)
@@ -177,8 +180,8 @@ class UserInterface:
         self.subThemeBox.grid(row=6, column=1, padx=6)
         self.eolLabel = Label(self.legoData, text="EOL")
         self.eolLabel.grid(row=7, column=0, sticky=W, padx=6)
-        self.eolBox = Entry(self.legoData)
-        self.eolBox.grid(row=8, column=0, padx=6)
+        self.eolBox = Entry(self.legoData, width=4)
+        self.eolBox.grid(row=8, column=0, padx=6,sticky=W)
 
         ######### PORTFOLIO DATA ###########
         # self.headlinePort = Label(self.portfolioData, text="PORTFOLIO DATA")
@@ -650,6 +653,7 @@ class UserInterface:
                 self.themeBox.insert(END, dict['Thema'])
                 self.releaseBox.delete(0, END)
                 self.releaseBox.insert(END, dict['Erscheinungsjahr'])
+                self.eolBox.config(bg=self.eol_calculator(dict['Erscheinungsjahr']))
 
     def fill_purchase_details(self, values):
         try:
@@ -781,6 +785,18 @@ class UserInterface:
         self.open_details()
         self.fill_purchase_details(self.selectItem())
 
+    def eol_calculator(self, release):
+        year = datetime.datetime.today().year
+        lifetime = year - int(release)
+
+        if lifetime <= 1:
+            eol = 'limegreen'
+        elif lifetime == 2:
+            eol = 'yellow'
+        elif lifetime >= 3:
+            eol = 'red'
+
+        return eol
     # def format_date(self,date):
     # datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
     # datetimeobject = datetimeobject.strftime('%Y-%m-%d')
