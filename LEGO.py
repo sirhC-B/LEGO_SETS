@@ -1,8 +1,10 @@
+import csv
 import tkinter
 from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.ttk import Notebook, Treeview
 import datetime
+import webbrowser
 
 from funktions import *
 import sqlite3, create_db
@@ -11,6 +13,8 @@ import sqlite3, create_db
 class UserInterface:
 
     def __init__(self):
+        global var
+        var = ""
         self.root = tkinter.Tk()
         self.root.title(' ')
         self.root.geometry('990x500')
@@ -31,8 +35,48 @@ class UserInterface:
         self.footerFrame = Frame(self.root)
         self.footerFrame.grid(row=3)
 
+        ############# MENUE ###############
+
+        my_menu = tkinter.Menu(self.root, relief=FLAT)
+        self.root.config(menu=my_menu)
+
+        file_menu = Menu(my_menu, tearoff=False)
+        filter_menu = Menu(my_menu, tearoff=False)
+        navi_menu = Menu(my_menu, tearoff=False)
+        add_menu = Menu(my_menu, tearoff=False)
+        info_menu = Menu(my_menu, tearoff=False)
+
+        my_menu.add_cascade(label="File", menu=file_menu)
+        my_menu.add_cascade(label="Add", menu=add_menu)
+        my_menu.add_cascade(label="Filter", menu=filter_menu)
+        my_menu.add_cascade(label="Navigate", menu=navi_menu)
+        my_menu.add_cascade(label="Info", menu=info_menu)
+
+        file_menu.add_command(label="Export as CSV", command=lambda: self.fill_messagebox(self.save_csv()))
+        file_menu.add_command(label="Exit", command=self.root.quit)
+
+        add_menu.add_command(label="Add Record", command=self.add_record)
+        add_menu.add_command(label="Add Shop", command=self.add_shop)
+        add_menu.add_command(label="Add Theme", command=self.add_theme)
+
+        navi_menu.add_command(label="Statistics", command=self.open_stats)
+        navi_menu.add_command(label="Database", command=self.edit_database)
+        navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("https://www.chess.com/home"))
+
+        self.d = {}
+        count = 0
+        for index in get_theme_list():
+            self.d[index] = count
+            self.d[f"{index}"] = IntVar()
+            count += 1
+
+            filter_menu.add_checkbutton(label=index, variable=self.d[f"{index}"],
+                                        command=lambda: self.fill_messagebox(self.zum_verrueckt_werden()))
+        filter_menu.add_separator()
+        filter_menu.add_command(label="Refresh Table", command=lambda: self.fill_purchase_table(NONE, NONE))
+
         ############# HEADLINE ##############
-        self.headline = Label(self.topTapFrame, text="LEGO DEPOT")
+        self.headline = Label(self.topTapFrame, text="Lego Portfolio",font=("arial italic", 12) )
         self.headline.pack(pady=5)
 
         ############ BUTTONS ###########
@@ -40,7 +84,8 @@ class UserInterface:
         self.Button1.grid(row=0)
 
         self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8,
-                              command=lambda: [self.delete_purchase(self.selectItem()), self.fill_purchase_table(NONE)])
+                              command=lambda: [self.delete_purchase(self.selectItem()),
+                                               self.fill_purchase_table(NONE, NONE)])
         self.Button2.grid(row=1, pady=5)
 
         self.Button3 = Button(self.rightFrame, text="DETAILS", width=18, pady=8,
@@ -54,7 +99,6 @@ class UserInterface:
         self.Button5.grid(row=4)
 
         ############ TREEVIEW #############
-
         self.tree = ttk.Treeview(self.treeFrame)
         self.tree.grid(row=0, column=0, pady=5, padx=(20, 0))
         style = ttk.Style()
@@ -89,14 +133,14 @@ class UserInterface:
         self.tree.column("IID", anchor=CENTER, width=90, minwidth=25)
 
         # self.tree.heading("#0", text="")  # first column
-        self.tree.heading("ID", text="SET ID", command=lambda: self.fill_purchase_table("setID"))
-        self.tree.heading("NAME", text="NAME", command=lambda: self.fill_purchase_table("setName"))
-        self.tree.heading("THEME", text="THEME", command=lambda: self.fill_purchase_table("setTheme"))
-        self.tree.heading("RETAIL", text="RETAIL", command=lambda: self.fill_purchase_table("setUvp"))
-        self.tree.heading("COST", text="COST", command=lambda: self.fill_purchase_table("purchasePrice"))
-        self.tree.heading("RELEASE", text="YEAR", command=lambda: self.fill_purchase_table("setYear"))
-        self.tree.heading("DATE", text="DATE", command=lambda: self.fill_purchase_table("purchaseDate"))
-        self.tree.heading("DISCOUNT", text="DISCOUNT", command=lambda: self.fill_purchase_table("purchaseDisc"))
+        self.tree.heading("ID", text="SET ID", command=lambda: self.fill_purchase_table(NONE, "setID"))
+        self.tree.heading("NAME", text="NAME", command=lambda: self.fill_purchase_table(NONE, "setName"))
+        self.tree.heading("THEME", text="THEME", command=lambda: self.fill_purchase_table(NONE, "setTheme"))
+        self.tree.heading("RETAIL", text="RETAIL", command=lambda: self.fill_purchase_table(NONE, "setUvp"))
+        self.tree.heading("COST", text="COST", command=lambda: self.fill_purchase_table(NONE, "purchasePrice"))
+        self.tree.heading("RELEASE", text="YEAR", command=lambda: self.fill_purchase_table(NONE, "setYear"))
+        self.tree.heading("DATE", text="DATE", command=lambda: self.fill_purchase_table(NONE, "purchaseDate"))
+        self.tree.heading("DISCOUNT", text="DISCOUNT", command=lambda: self.fill_purchase_table(NONE, "purchaseDisc"))
 
         ############ FOOTER ############
         self.textInfo = Text(self.footerFrame, height=7, width=90)
@@ -125,12 +169,12 @@ class UserInterface:
         disccheck.grid(row=1, column=5, pady=3, padx=15)
 
         # dynamic columns
-        self.columnlist = ["ID", "NAME", "THEME", "COST","RETAIL","DISCOUNT"]
+        self.columnlist = ["ID", "NAME", "THEME", "COST", "RETAIL", "DISCOUNT"]
         self.tree["displaycolumns"] = self.columnlist
         # doubleclick event
         self.tree.bind('<Double-Button-1>', self.double_click)
         # update table
-        self.fill_purchase_table(NONE)
+        self.fill_purchase_table(NONE, NONE)
         self.root.mainloop()
 
     def open_details(self):
@@ -181,7 +225,7 @@ class UserInterface:
         self.eolLabel = Label(self.legoData, text="EOL")
         self.eolLabel.grid(row=7, column=0, sticky=W, padx=6)
         self.eolBox = Entry(self.legoData, width=4)
-        self.eolBox.grid(row=8, column=0, padx=6,sticky=W)
+        self.eolBox.grid(row=8, column=0, padx=6, sticky=W)
 
         ######### PORTFOLIO DATA ###########
         # self.headlinePort = Label(self.portfolioData, text="PORTFOLIO DATA")
@@ -344,7 +388,7 @@ class UserInterface:
                                                                                      self.themeVar.get(),
                                                                                      self.releaseBox.get(),
                                                                                      self.subThemeBox.get())),
-                                             self.fill_purchase_table(NONE), costbox.delete(0, END),
+                                             self.fill_purchase_table(NONE, NONE), costbox.delete(0, END),
                                              dateBox.delete(0, END)])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
@@ -388,6 +432,7 @@ class UserInterface:
         setTab = Frame(tabControl)
         themeTab = Frame(tabControl)
         shopTab = Frame(tabControl)
+        settingTab = Frame(tabControl)
         # SETs TAB
         tableFrame = Frame(setTab)
         tableFrame.grid(row=1, column=0)
@@ -405,11 +450,14 @@ class UserInterface:
         tableFrameSh.grid(row=1, column=0)
         buttonFrameSh = Frame(shopTab)
         buttonFrameSh.grid(row=1, column=1)
+        # Settings Tab
+
         ########## TAB CONTROLL ###########
 
         tabControl.add(setTab, text='SETs DB')
         tabControl.add(themeTab, text='Theme DB')
         tabControl.add(shopTab, text='Shop DB')
+        tabControl.add(settingTab, text='Settings')
         tabControl.pack(expand=1, fill='both')
 
         ########### SETs TABLE ############
@@ -588,7 +636,6 @@ class UserInterface:
         subThemes.config(width=16, borderwidth=1)
         addBut = Button(newThemeTopWin, text="Add",
                         command=lambda: [self.fill_messagebox(add_theme_to_DB(nameBox.get(), var.get())),
-                                         self.themeVar.set(nameBox.get()),
                                          nameBox.delete(0, END),
                                          newThemeTopWin.destroy()])
         addBut.grid(row=3, columnspan=2, pady=8)
@@ -606,7 +653,6 @@ class UserInterface:
         urlBox.grid(row=1, column=1, pady=5, padx=5)
         addBut = Button(newShopTopWin, text="Add",
                         command=lambda: [self.fill_messagebox(add_shop_to_DB(nameBox.get(), urlBox.get())),
-                                         self.shopVar.set(nameBox.get()),
                                          nameBox.delete(0, END), urlBox.delete(0, END),
                                          newShopTopWin.destroy()])
         addBut.grid(row=3, columnspan=2, pady=8)
@@ -738,13 +784,13 @@ class UserInterface:
                 self.shopTree.insert('', 'end', values=(data[0], data[1]), tags=('oddrow',))
             count += 1
 
-    def fill_purchase_table(self, order):
+    def fill_purchase_table(self, filter, order):
         global count
         count = 0
         self.tree.delete(*self.tree.get_children())
         self.tree.tag_configure('oddrow', background="grey85")
         self.tree.tag_configure('evenrow', background="white")
-        list = get_purchase_records(order)
+        list = get_purchase_records(filter, order)
         for data in list:
             if count % 2 == 0:
                 self.tree.insert('', 'end',
@@ -797,6 +843,36 @@ class UserInterface:
             eol = 'red'
 
         return eol
+
+    def save_csv(self):
+        name = "Lego-" + str(datetime.date.today())
+        with open(name, "w", newline='') as csv_file:
+            csvwriter = csv.writer(csv_file, delimiter=',')
+
+            for records in self.tree.get_children():
+                row = self.tree.item(records)['values']
+                print('save row:', row)
+                csvwriter.writerow(row)
+        return (f"CSV-Datei wurde unter dem Namen '{name}' gespeichert.")
+
+    def zum_verrueckt_werden(self):
+        global var
+        if var:
+            self.d[f"{var}"].set(0)
+
+        for index in get_theme_list():
+            if self.d[f"{index}"].get() == 1:
+                var = index
+
+        for index1 in get_theme_list():
+            self.d[f"{index1}"].set(0)
+        self.d[f"{var}"].set(1)
+
+        print(var)
+        self.fill_purchase_table(var, NONE)
+
+        return (f"Alle Sets mit dem Thema '{var}' werden angezeigt.")
+
     # def format_date(self,date):
     # datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
     # datetimeobject = datetimeobject.strftime('%Y-%m-%d')
