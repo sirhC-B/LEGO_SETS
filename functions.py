@@ -182,13 +182,20 @@ def get_set_records():
     return setList
 
 
-def get_purchase_records(order="purchaseID"):
+def get_purchase_records(filter, order="purchaseID"):
     db = sqlite3.connect('lego_db')
     cursor = db.cursor()
-    cursor.execute(f"""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
-                    purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases 
-                    JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
-                    ORDER BY"{order}" """)
+    if (filter == NONE):
+        cursor.execute(f"""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
+                        purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
+                        JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+                        ORDER BY"{order}" """)
+    else:
+        cursor.execute(f"""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
+                            purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
+                            JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+                            WHERE setTheme='{filter}'
+                            ORDER BY"{order}" """)
     purchaseList = cursor.fetchall()
     cursor.close()
 
@@ -214,6 +221,7 @@ def get_shop_records():
 
     return shopList
 
+
 def delete_purchase_from_db(iid):
     try:
         db = sqlite3.connect('lego_db')
@@ -223,7 +231,8 @@ def delete_purchase_from_db(iid):
         print(e)
         return ("Fehler beim loeschen des Sets.")
 
-    return("Set wurde erfolgreich entfernt.")
+    return ("Set wurde erfolgreich entfernt.")
+
 
 def search_for_purchase(iid):
     db = sqlite3.connect('lego_db')
