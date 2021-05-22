@@ -418,8 +418,7 @@ class UserInterface:
         ############## FOOTER ################
         takeSetBut = Button(footerFrame, text="Apply",
                             command=lambda: [self.fill_messagebox(add_purchase_to_db(costbox.get(),
-                                                                                     # self.format_date(dateBox.get()),
-                                                                                     dateBox.get(),
+                                                                                     self.format_date(dateBox.get()),
                                                                                      self.shopVar.get(),
                                                                                      amountBox.get(),
                                                                                      self.setIDbox.get(),
@@ -428,8 +427,7 @@ class UserInterface:
                                                                                      self.themeVar.get(),
                                                                                      self.releaseBox.get(),
                                                                                      self.subThemeBox.get())),
-                                             self.fill_purchase_table(NONE, 'purchaseID'), costbox.delete(0, END),
-                                             dateBox.delete(0, END)])
+                                             self.fill_purchase_table(NONE, 'purchaseID'), costbox.delete(0, END)])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
         goBackBut.grid(padx=5, row=0, column=1, pady=6)
@@ -917,11 +915,11 @@ class UserInterface:
 
         return (f"Alle Sets mit dem Thema '{var}' werden angezeigt.")
 
-    # def format_date(self,date):
-    # datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
-    # datetimeobject = datetimeobject.strftime('%Y-%m-%d')
-    # print(datetimeobject)
-    # return datetimeobject
+    def format_date(self,date):
+        datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
+        datetimeobject = datetimeobject.strftime('%Y-%m-%d')
+        print(datetimeobject)
+        return datetimeobject
 
 
 if __name__ == '__main__':

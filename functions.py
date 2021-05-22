@@ -131,7 +131,7 @@ def add_purchase_to_db(cost, date, shop, amount, id, retail, name, theme, releas
                 text = f"Neuer Shop '{shop}' wurde hinzugefuegt.\n"
 
             c.execute(f"""INSERT INTO lego_purchases(purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,purchaseSet,purchaseShop) 
-                            VALUES ('{cost}','{date}','{discountP}','{amount}','{id}','{shop}')
+                            VALUES ('{cost}',TO_DATE('{date}','YYYY-MM-DD'),'{discountP}','{amount}','{id}','{shop}')
                                """)
             db.commit()
             c.close()
