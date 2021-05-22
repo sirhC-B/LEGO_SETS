@@ -6,8 +6,8 @@ from tkinter.ttk import Notebook, Treeview
 import datetime
 import webbrowser
 
-from funktions import *
-import sqlite3, create_db
+from functions import *
+import sqlite3, db_create_table
 
 
 class UserInterface:
@@ -882,5 +882,5 @@ class UserInterface:
 
 if __name__ == '__main__':
     db = sqlite3.connect('lego_db')
-    create_db.create_table(db)
+    db_create_table.create_table(db)
     gui = UserInterface()
