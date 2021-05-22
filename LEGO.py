@@ -1,5 +1,6 @@
 import csv
 import tkinter
+from tkcalendar import Calendar
 from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.ttk import Notebook, Treeview
@@ -13,6 +14,8 @@ from functions import *
 import sqlite3, db_create_table
 
 
+
+
 class UserInterface:
 
     def __init__(self):
@@ -21,6 +24,7 @@ class UserInterface:
         self.root = tkinter.Tk()
         self.root.title(' ')
         self.root.geometry('990x500')
+        self.root.resizable(False,False)
 
         ############### FRAMES ##############
         self.topTapFrame = Frame(self.root)
@@ -122,6 +126,8 @@ class UserInterface:
                 self.tree.configure(yscrollcommand="")
                 self.vsb.destroy()
 
+
+
         self.tree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "COST", "RELEASE", "DATE", "DISCOUNT", "IID")
 
         self.tree.column("#0", width=0, stretch=NO)  # first column
@@ -183,6 +189,7 @@ class UserInterface:
     def open_details(self):
         self.topWinDetails = Toplevel()
         self.topWinDetails.title("SET DETAILS")
+        self.topWinDetails.resizable(False,False)
 
         ########### FRAMES #############
         self.headFrame = Frame(self.topWinDetails)
@@ -240,7 +247,10 @@ class UserInterface:
         self.dateLabel = Label(self.portfolioData, text="PURCHASE DATE")
         self.dateLabel.grid(row=1, column=1, sticky=W, padx=6)
         self.dateBox = Entry(self.portfolioData)
-        self.dateBox.grid(row=2, column=1, padx=6)
+        # self.dateButton = Button(self.portfolioData, text="..")
+        # self.dateButton.grid(row=2, column=2, padx=6)
+        # self.dateBox.grid(row=2, column=1, padx=6)
+        # self.dateBox.config(width=5)
         self.discountLabel = Label(self.portfolioData, text="DISCOUNT")
         self.discountLabel.grid(row=3, column=0, sticky=W, padx=6)
         self.discountBox = Entry(self.portfolioData)
@@ -271,6 +281,7 @@ class UserInterface:
     def add_record(self):
         addRecTopWin = Toplevel()
         addRecTopWin.title("ADD RECORD")
+        addRecTopWin.resizable(False,False)
 
         def callback_theme(*args):
             if self.themeVar.get() == 'Neues Thema anlegen':
@@ -279,6 +290,31 @@ class UserInterface:
         def callback_shop(*args):
             if self.shopVar.get() == 'Neuen Shop anlegen':
                 self.add_shop()
+
+        def show_calendar():
+            today = datetime.date.today()
+            root2 = Tk()
+            root2.geometry("400x400")
+            cal = Calendar(root2, selectmode='day',
+                           year=today.year, month=today.month,
+                           day=today.day, date_pattern= "dd.MM.yyyy")
+            cal.pack(pady=20)
+            def grad_date():
+                date.config(text="Selected Date is: " + cal.get_date())
+                dateBox.delete(0, tkinter.END)
+                dateBox.insert(0, cal.get_date())
+
+
+            # Add Button and Label
+            Button(root2, text="Get Date",
+                   command=grad_date).pack(pady=20)
+            date = Label(root2, text="")
+            date.pack(pady=20)
+
+
+            # Excecute Tkinter
+            root2.mainloop()
+
 
         ########### FRAMES #############
         sucheLabel = LabelFrame(addRecTopWin, text="Suche (SET ID)")
@@ -346,8 +382,11 @@ class UserInterface:
         dateLabel = Label(portfolioData, text="PURCHASE DATE")
         dateLabel.grid(row=1, column=1, sticky=W, padx=6)
         dateBox = Entry(portfolioData)
-        dateBox.grid(row=2, column=1, padx=6)
+        dateBox.grid(row=2, column=1, padx=(6,0))
         dateBox.insert(0, datetime.date.today().strftime("%d.%m.%Y"))
+        dateButton = Button(portfolioData, text="..",command = show_calendar)
+        dateButton.grid(row=2, column=2, padx=(0,6))
+        dateBox.grid(row=2, column=1, padx=6)
         discountLabel = Label(portfolioData, text="DISCOUNT")
         discountLabel.grid(row=3, column=0, sticky=W, padx=6)
         discountBox = Entry(portfolioData)
@@ -365,14 +404,14 @@ class UserInterface:
         self.shopVar = StringVar()
         self.shopVar.set(self.shopChoices[0])
         shopBox = OptionMenu(portfolioData, self.shopVar, *self.shopChoices)
-        shopBox.config(width=16, borderwidth=1)
-        shopBox.grid(row=4, column=1, padx=6)
+        shopBox.config(width=14, borderwidth=1)
+        shopBox.grid(row=4, column=1, padx=(6,0))
         self.shopVar.trace("w", callback_shop)
         ############################
         amountLabel = Label(portfolioData, text="AMOUNT")
         amountLabel.grid(row=5, column=1, sticky=W, padx=6)
         amountBox = Spinbox(portfolioData, from_=1, to=25, width=18)
-        amountBox.grid(row=6, column=1, padx=7)
+        amountBox.grid(row=6, column=1, padx=(6,0))
         avePriceLabel = Label(portfolioData, text="AVE PRICE")
         avePriceLabel.grid(row=7, column=0, sticky=W, padx=6)
         avePriceBox = Entry(portfolioData)
@@ -400,6 +439,7 @@ class UserInterface:
     def open_stats(self):
         statsTopWin = Toplevel(self.root)
         statsTopWin.title("Statistics")
+        statsTopWin.resizable(False,False)
 
         ########### FRAMES ############
         topFrame = Frame(statsTopWin)
@@ -428,6 +468,7 @@ class UserInterface:
 
         topWinDatabase = Toplevel()
         topWinDatabase.title("DATABASE SETTINGS")
+        topWinDatabase.resizable(False,False)
         tabControl = Notebook(topWinDatabase)
 
         ########### FRAMES ################
@@ -625,6 +666,7 @@ class UserInterface:
     def add_theme(self):
         newThemeTopWin = Toplevel()
         newThemeTopWin.title("New Theme")
+        newThemeTopWin.resizable(False,False)
         nameLabel = Label(newThemeTopWin, text="Name")
         nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=5)
         nameBox = Entry(newThemeTopWin)
@@ -646,6 +688,7 @@ class UserInterface:
     def add_shop(self):
         newShopTopWin = Toplevel()
         newShopTopWin.title("New Shop")
+        newShopTopWin.resizable(False,False)
         nameLabel = Label(newShopTopWin, text="Name")
         nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=5)
         nameBox = Entry(newShopTopWin)
