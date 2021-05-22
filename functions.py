@@ -21,8 +21,9 @@ def get_details_from_web(set_nr):
     for index, elem in enumerate(text):
         if "| Artikel-Nr:" in elem:
             name = str(text[index - 1])
-            pure_name_pos = re.match('.+([0-9])[^0-9]*$', name)
-            details_dict["Name"] = name[pure_name_pos.end(1) + 1:]
+            if(name.find(str(set_nr)) != -1):
+                set_nr_pos=name.find(str(set_nr))
+            details_dict["Name"] = name[set_nr_pos+len(str(set_nr))+1:]
         elif "| Erscheinungsjahr: " in elem:
             pubYear = str(text[index + 1])
             details_dict["Erscheinungsjahr"] = pubYear
