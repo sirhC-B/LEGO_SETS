@@ -1,14 +1,14 @@
 import csv
 import tkinter
-from tkcalendar import Calendar
+
+
 from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.ttk import Notebook, Treeview
 import datetime
 import webbrowser
-
-#das ist ein push
-#neuer push
+import tkcalendar
+from PIL import ImageTk, Image
 
 from functions import *
 import sqlite3, db_create_table
@@ -247,10 +247,7 @@ class UserInterface:
         self.dateLabel = Label(self.portfolioData, text="PURCHASE DATE")
         self.dateLabel.grid(row=1, column=1, sticky=W, padx=6)
         self.dateBox = Entry(self.portfolioData)
-        # self.dateButton = Button(self.portfolioData, text="..")
-        # self.dateButton.grid(row=2, column=2, padx=6)
-        # self.dateBox.grid(row=2, column=1, padx=6)
-        # self.dateBox.config(width=5)
+        self.dateBox.grid(row=2, column=1, padx=6)
         self.discountLabel = Label(self.portfolioData, text="DISCOUNT")
         self.discountLabel.grid(row=3, column=0, sticky=W, padx=6)
         self.discountBox = Entry(self.portfolioData)
@@ -294,11 +291,12 @@ class UserInterface:
         def show_calendar():
             today = datetime.date.today()
             root2 = Tk()
-            root2.geometry("400x400")
-            cal = Calendar(root2, selectmode='day',
+            root2.title("Calender")
+            root2.geometry("300x250")
+            cal = tkcalendar.Calendar(root2, selectmode='day',
                            year=today.year, month=today.month,
                            day=today.day, date_pattern= "dd.MM.yyyy")
-            cal.pack(pady=20)
+            cal.pack(pady=10)
             def grad_date():
                 date.config(text="Selected Date is: " + cal.get_date())
                 dateBox.delete(0, tkinter.END)
@@ -307,13 +305,9 @@ class UserInterface:
 
             # Add Button and Label
             Button(root2, text="Get Date",
-                   command=grad_date).pack(pady=20)
+                   command=lambda:[grad_date(),root2.destroy()]).pack(pady=10)
             date = Label(root2, text="")
-            date.pack(pady=20)
-
-
-            # Excecute Tkinter
-            root2.mainloop()
+            date.pack(pady=10)
 
 
         ########### FRAMES #############
@@ -380,13 +374,17 @@ class UserInterface:
         costbox = Entry(portfolioData)
         costbox.grid(row=2, column=0)
         dateLabel = Label(portfolioData, text="PURCHASE DATE")
-        dateLabel.grid(row=1, column=1, sticky=W, padx=6)
+        dateLabel.grid(row=1, column=1, sticky=W,padx=(6,0),columnspan=2)
         dateBox = Entry(portfolioData)
-        dateBox.grid(row=2, column=1, padx=(6,0))
+        dateBox.grid(row=2, column=1, padx=0,sticky=W+E)
+        dateBox.config(width=17)
         dateBox.insert(0, datetime.date.today().strftime("%d.%m.%Y"))
-        dateButton = Button(portfolioData, text="..",command = show_calendar)
-        dateButton.grid(row=2, column=2, padx=(0,6))
-        dateBox.grid(row=2, column=1, padx=6)
+        image1 = Image.open("images/calender-icon.png")
+        cal_img = ImageTk.PhotoImage(image1)
+        dateButton = Button(portfolioData, command=show_calendar, image=cal_img,height=17,borderwidth=0.5)
+        dateButton.image = cal_img
+        dateButton.grid(row=2, column=2,padx=(0,6),sticky=W+S)
+        dateBox.grid(row=2, column=1,padx=(6,0))
         discountLabel = Label(portfolioData, text="DISCOUNT")
         discountLabel.grid(row=3, column=0, sticky=W, padx=6)
         discountBox = Entry(portfolioData)
@@ -397,21 +395,21 @@ class UserInterface:
         discount1Box.grid(row=6, column=0, padx=6)
         ######### SHOP ############
         shopLabel = Label(portfolioData, text="SHOP")
-        shopLabel.grid(row=3, column=1, sticky=W, padx=6)
+        shopLabel.grid(row=3, column=1, sticky=W, padx=(6,0),columnspan=2)
         self.shopChoices = [' ', 'Neuen Shop anlegen']
         for index in get_shop_list():
             self.shopChoices.append(index)
         self.shopVar = StringVar()
         self.shopVar.set(self.shopChoices[0])
         shopBox = OptionMenu(portfolioData, self.shopVar, *self.shopChoices)
-        shopBox.config(width=14, borderwidth=1)
-        shopBox.grid(row=4, column=1, padx=(6,0))
+        shopBox.config(width=16, borderwidth=0.5)
+        shopBox.grid(row=4, column=1, padx=(6,0),columnspan=2,sticky=W+S)
         self.shopVar.trace("w", callback_shop)
         ############################
         amountLabel = Label(portfolioData, text="AMOUNT")
-        amountLabel.grid(row=5, column=1, sticky=W, padx=6)
+        amountLabel.grid(row=5, column=1, sticky=W, padx=(6,0))
         amountBox = Spinbox(portfolioData, from_=1, to=25, width=18)
-        amountBox.grid(row=6, column=1, padx=(6,0))
+        amountBox.grid(row=6, column=1, padx=(6,0),columnspan=2)
         avePriceLabel = Label(portfolioData, text="AVE PRICE")
         avePriceLabel.grid(row=7, column=0, sticky=W, padx=6)
         avePriceBox = Entry(portfolioData)
