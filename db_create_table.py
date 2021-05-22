@@ -15,7 +15,7 @@ def create_table(db):
 
                 CREATE TABLE IF NOT EXISTS lego_sets(
                     setID int NOT NULL unique ,
-                    setName varchar(30) NOT NULL ,
+                    setName varchar(60) NOT NULL ,
                     setUvp float,
                     setYear int,
                     setTheme varchar(30),
@@ -44,14 +44,11 @@ def create_table(db):
                     FOREIGN KEY (purchaseShop) REFERENCES lego_shops(shopName)  
                 );
                 ''')
-    c.execute('''
-                DROP TABLE dummyTable;
-                ''')
 
     db.commit()
     c.close()
-    db.close()
+    #db.close()
 
 
-if __name__ == '__main__':
-    create_table(db_conn.db)
+# if __name__ == '__main__':
+#     create_table(db_conn.db)

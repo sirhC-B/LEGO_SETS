@@ -55,7 +55,7 @@ class UserInterface:
         my_menu.add_cascade(label="Info", menu=info_menu)
 
         file_menu.add_command(label="Export as CSV", command=lambda: self.fill_messagebox(self.save_csv()))
-        file_menu.add_command(label="Exit", command=self.root.quit)
+        file_menu.add_command(label="Exit", command=lambda:[db.close(), self.root.quit()])
 
         add_menu.add_command(label="Add Record", command=self.add_record)
         add_menu.add_command(label="Add Shop", command=self.add_shop)
@@ -75,7 +75,7 @@ class UserInterface:
             filter_menu.add_checkbutton(label=index, variable=self.d[f"{index}"],
                                         command=lambda: self.fill_messagebox(self.zum_verrueckt_werden()))
         filter_menu.add_separator()
-        filter_menu.add_command(label="Refresh Table", command=lambda: self.fill_purchase_table(NONE, NONE))
+        filter_menu.add_command(label="Refresh Table", command=lambda: self.fill_purchase_table(NONE, 'purchaseID'))
 
         ############# HEADLINE ##############
         self.headline = Label(self.topTapFrame, text="Lego Portfolio",font=("arial italic", 12) )
@@ -87,7 +87,7 @@ class UserInterface:
 
         self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8,
                               command=lambda: [self.delete_purchase(self.selectItem()),
-                                               self.fill_purchase_table(NONE, NONE)])
+                                               self.fill_purchase_table(NONE, 'purchaseID')])
         self.Button2.grid(row=1, pady=5)
 
         self.Button3 = Button(self.rightFrame, text="DETAILS", width=18, pady=8,
@@ -176,7 +176,7 @@ class UserInterface:
         # doubleclick event
         self.tree.bind('<Double-Button-1>', self.double_click)
         # update table
-        self.fill_purchase_table(NONE, NONE)
+        self.fill_purchase_table(NONE, 'purchaseID')
         self.root.mainloop()
 
     def open_details(self):
@@ -390,7 +390,7 @@ class UserInterface:
                                                                                      self.themeVar.get(),
                                                                                      self.releaseBox.get(),
                                                                                      self.subThemeBox.get())),
-                                             self.fill_purchase_table(NONE, NONE), costbox.delete(0, END),
+                                             self.fill_purchase_table(NONE, 'purchaseID'), costbox.delete(0, END),
                                              dateBox.delete(0, END)])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
         goBackBut = Button(footerFrame, text="Return")
@@ -751,10 +751,10 @@ class UserInterface:
         list = get_set_records()
         for data in list:
             if count % 2 == 0:
-                self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3] + " €", data[4]),
+                self.setTree.insert('', 'end', values=(data[0], data[1], data[2], str(data[3]) + " €", data[4]),
                                     tags=('evenrow',))
             else:
-                self.setTree.insert('', 'end', values=(data[0], data[1], data[2], data[3] + " €", data[4]),
+                self.setTree.insert('', 'end', values=(data[0], data[1], data[2], str(data[3]) + " €", data[4]),
                                     tags=('oddrow',))
             count += 1
 
@@ -871,7 +871,7 @@ class UserInterface:
         self.d[f"{var}"].set(1)
 
         print(var)
-        self.fill_purchase_table(var, NONE)
+        self.fill_purchase_table(var, 'purchaseID')
 
         return (f"Alle Sets mit dem Thema '{var}' werden angezeigt.")
 
@@ -883,6 +883,7 @@ class UserInterface:
 
 
 if __name__ == '__main__':
-    db = sqlite3.connect('lego_db')
+    #db = sqlite3.connect('lego_db')
+    db=db_conn.db
     db_create_table.create_table(db)
     gui = UserInterface()
