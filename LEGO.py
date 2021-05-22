@@ -7,6 +7,7 @@ import datetime
 import webbrowser
 
 #das ist ein push
+#neuer push
 
 from functions import *
 import sqlite3, db_create_table
