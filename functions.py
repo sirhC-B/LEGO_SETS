@@ -8,6 +8,8 @@ from LEGO import *
 
 
 def get_details_from_web(set_nr):
+        if not str(set_nr).isdigit():
+        return None
     details_dict = {"Setnummer": set_nr, "Name": "", "Erscheinungsjahr": "", "UVP": "", "Thema": "", }
     url = "https://www.brickmerge.de/" + str(set_nr)
     source = requests.get(url)
