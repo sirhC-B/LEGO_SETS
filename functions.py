@@ -188,7 +188,8 @@ def get_set_list():
 
 def get_set_records():
     cursor = db.cursor()
-    cursor.execute("""SELECT setID,setName,setTheme,setUvp,setYear FROM lego_sets""")
+    cursor.execute("""SELECT setID,setName,themeName,setUvp,setYear FROM lego_sets
+                        JOIN lego_themes ON lego_sets.setTheme = lego_themes.themeID""")
     setList = cursor.fetchall()
     cursor.close()
 

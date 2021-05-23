@@ -77,7 +77,8 @@ class UserInterface:
             filter_menu.add_checkbutton(label=index, variable=self.d[f"{index}"],
                                         command=lambda: self.fill_messagebox(self.zum_verrueckt_werden()))
         filter_menu.add_separator()
-        filter_menu.add_command(label="Refresh Table", command=lambda: self.fill_purchase_table(NONE, 'purchaseID'))
+        filter_menu.add_command(label="Refresh Table",
+                                command=lambda: [self.fill_purchase_table(NONE, 'purchaseID'), self.set_checkmarks(0)])
 
         ############# HEADLINE ##############
         self.headline = Label(self.topTapFrame, text="Lego Portfolio", font=("arial italic", 12))
@@ -665,7 +666,9 @@ class UserInterface:
         nameBox.grid(row=1, column=0, padx=5)
         subLabel = Label(newThemeTopWin, text="Sub Theme")
         subLabel.grid(row=0, column=1, pady=5, sticky=W, padx=5)
-        options = ['', '2', '3']
+        options = []
+        for index in get_theme_list():
+            options.append(index)
         var = StringVar()
         var.set(options[0])
         subThemes = OptionMenu(newThemeTopWin, var, *options)
@@ -691,7 +694,7 @@ class UserInterface:
         urlBox.grid(row=1, column=1, pady=5, padx=5)
         addBut = Button(newShopTopWin, text="Add",
                         command=lambda: [self.fill_messagebox(add_shop_to_DB(nameBox.get(), urlBox.get())),
-                                         nameBox.delete(0, END), urlBox.delete(0, END),
+                                         self.shopVar.set(nameBox.get()), nameBox.delete(0, END), urlBox.delete(0, END),
                                          newShopTopWin.destroy()])
         addBut.grid(row=3, columnspan=2, pady=8)
 
@@ -928,6 +931,10 @@ class UserInterface:
                 print('save row:', row)
                 csvwriter.writerow(row)
         return (f"CSV-Datei wurde unter dem Namen '{name}' gespeichert.")
+
+    def set_checkmarks(self, i):
+        for index1 in get_theme_list():
+            self.d[f"{index1}"].set(i)
 
     def zum_verrueckt_werden(self):
         global var
