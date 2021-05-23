@@ -9,7 +9,7 @@ import datetime
 import webbrowser
 import tkcalendar
 from PIL import ImageTk, Image
-from datetime import datetime
+from datetime import date
 
 from functions import *
 import sqlite3, db_create_table
