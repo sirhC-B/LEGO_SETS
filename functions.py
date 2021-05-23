@@ -90,9 +90,13 @@ def add_set_to_DB(id, name, retail, theme, release, subtheme):
                 add_theme_to_DB(theme, subtheme)
                 text = f"Neues Thema '{theme}' wurde hinzugefuegt.\n"
 
+            c.execute(f"SELECT themeid FROM lego_themes WHERE themename='{theme}';")
+            themeid = c.fetchone()
+
+
             retail_float = float(retail[:-2].replace(",", "."))
 
-            c.execute(f"""INSERT INTO lego_sets VALUES ('{id}','{name}','{retail_float}','{release}','{theme}'
+            c.execute(f"""INSERT INTO lego_sets VALUES ('{id}','{name}','{retail_float}','{release}','{themeid[0]}'
                            )""")
             db.commit()
             c.close()
@@ -129,6 +133,9 @@ def add_purchase_to_db(cost, date, shop, amount, id, retail, name, theme, releas
             if not shop in get_shop_list() and shop != "" and shop != "Neuen Shop anlegen":
                 add_shop_to_DB(shop)
                 text = f"Neuer Shop '{shop}' wurde hinzugefuegt.\n"
+
+            c.execute(f"SELECT shopid FROM lego_shops WHERE shopname='{shop}';")
+            shop = c.fetchone()[0]
 
             c.execute(f"""INSERT INTO lego_purchases(purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,purchaseSet,purchaseShop) 
                             VALUES ('{cost}',TO_DATE('{date}','YYYY-MM-DD'),'{discountP}','{amount}','{id}','{shop}')
@@ -194,16 +201,24 @@ def get_purchase_records(filter, order='purchaseID'):
     cursor = db.cursor()
     if (filter == NONE):
         cursor.execute(f"""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
-                        purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
+                        purchaseSet,shopName,setName,themeName,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
                         JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+                        JOIN lego_themes ON lego_sets.setTheme = lego_themes.themeID
+                        JOIN lego_shops ON lego_purchases.purchaseShop = lego_shops.shopID
                         ORDER BY {order} """)
     else:
+        cursor.execute(f"SELECT themeid FROM lego_themes WHERE themename='{filter}';")
+        filter = cursor.fetchone()[0]
         cursor.execute(f"""SELECT purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,
-                            purchaseSet,purchaseShop,setName,setTheme,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
+                            purchaseSet,shopName,setName,themeName,setUvp,setYear,purchaseDisc,purchaseID FROM lego_purchases
                             JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+                            JOIN lego_themes ON lego_sets.setTheme = lego_themes.themeID
+                            JOIN lego_shops ON lego_purchases.purchaseShop = lego_shops.shopID
                             WHERE setTheme='{filter}'
                             ORDER BY {order} """)
     purchaseList = cursor.fetchall()
+
+
     db.commit()
     cursor.close()
 
@@ -244,7 +259,10 @@ def delete_purchase_from_db(iid):
 
 def search_for_purchase(iid):
     cursor = db.cursor()
-    cursor.execute(f"SELECT * FROM lego_purchases WHERE purchaseID='{iid}'; ")
+    cursor.execute(f"""SELECT purchaseID,purchasePrice,purchaseDate,purchaseDisc,purchaseAmount,purchaseSet,shopName 
+                        FROM lego_purchases 
+                        JOIN lego_shops ON lego_purchases.purchaseShop = lego_shops.shopID
+                        WHERE purchaseID='{iid}'; """)
     result = cursor.fetchall()
     cursor.close()
 

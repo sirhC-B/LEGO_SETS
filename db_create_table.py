@@ -2,13 +2,14 @@ import db_conn
 
 def create_table(db):
     c = db.cursor()
-    c.execute('''SET schema 'lego' ''')
+    c.execute('''CREATE SCHEMA IF NOT EXISTS lego; ''')
+    c.execute('''SET schema 'lego'; ''')
 
     c.execute('''
                 CREATE TABLE IF NOT EXISTS lego_themes(
                     themeID SERIAL PRIMARY KEY,
-                    themeName varchar(30) unique not null ,
-                    subTheme varchar(30)
+                    themeName varchar(60) unique not null ,
+                    subTheme varchar(60)
                 );
                 ''')
     c.execute('''
@@ -18,12 +19,11 @@ def create_table(db):
                     setName varchar(60) NOT NULL ,
                     setUvp float,
                     setYear int,
-                    setTheme varchar(30),
+                    setTheme int,
                     PRIMARY KEY (setID),
-                    FOREIGN KEY (setTheme) REFERENCES lego_themes(themeName)
+                    FOREIGN KEY (setTheme) REFERENCES lego_themes(themeID)
                 ); 
                 ''')
-
     c.execute('''
                 CREATE TABLE IF NOT EXISTS lego_shops(
                     shopID SERIAL PRIMARY KEY, 
@@ -39,9 +39,9 @@ def create_table(db):
                     purchaseDisc float,
                     purchaseAmount int,
                     purchaseSet int NOT NULL ,
-                    purchaseShop varchar(30),
+                    purchaseShop int,
                     FOREIGN KEY (purchaseSet) REFERENCES lego_sets(setID),
-                    FOREIGN KEY (purchaseShop) REFERENCES lego_shops(shopName)  
+                    FOREIGN KEY (purchaseShop) REFERENCES lego_shops(shopID)  
                 );
                 ''')
 
