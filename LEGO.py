@@ -9,6 +9,7 @@ import datetime
 import webbrowser
 import tkcalendar
 from PIL import ImageTk, Image
+from datetime import datetime
 
 from functions import *
 import sqlite3, db_create_table
@@ -834,17 +835,18 @@ class UserInterface:
         self.tree.tag_configure('evenrow', background="white")
         list = get_purchase_records(filter, order)
         for data in list:
+            date_conv = str(data[1].strftime("%d.%m.%Y"))
             if count % 2 == 0:
                 self.tree.insert('', 'end',
                                  values=(
                                      data[4], data[6], data[7], str(data[8]) + "€", str(data[0]) + "€", data[9],
-                                     data[1],
+                                     date_conv,
                                      str(data[10]) + "%", data[11]), tags=('evenrow',))
             else:
                 self.tree.insert('', 'end',
                                  values=(
                                      data[4], data[6], data[7], str(data[8]) + "€", str(data[0]) + "€", data[9],
-                                     data[1],
+                                     date_conv,
                                      str(data[10]) + "%", data[11]), tags=('oddrow',))
             count += 1
 
