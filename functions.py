@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-import sqlite3
 import requests
 import re
 
@@ -255,6 +254,39 @@ def delete_purchase_from_db(iid):
         return ("Fehler beim loeschen des Sets.")
 
     return ("Set wurde erfolgreich entfernt.")
+
+
+def delete_shop_from_db(iid):
+    try:
+            cursor = db.cursor()
+            cursor.execute(f"""DELETE FROM lego_shops WHERE shopName='{iid}'; """)
+            db.commit()
+            cursor.close()
+
+    except Exception as e:
+        print(e)
+        if (str(type(e)) == "<class 'psycopg2.errors.ForeignKeyViolation'>"):
+            return ("Shop kann nicht geloescht werden weil Abhaengkeiten zur Deoptdatenbank bestehen.")
+        else:
+            return ("Fehler beim loeschen des Shops.")
+
+    return ("Shop wurde erfolgreich entfernt.")
+
+def delete_theme_from_db(iid):
+    try:
+        cursor = db.cursor()
+        cursor.execute(f"""DELETE FROM lego_themes WHERE themeName='{iid}'; """)
+        db.commit()
+        cursor.close()
+
+    except Exception as e:
+        print(e)
+        if (str(type(e)) == "<class 'psycopg2.errors.ForeignKeyViolation'>"):
+            return ("Thema kann nicht geloescht werden weil Abhaengkeiten zur Setdatenbank bestehen.")
+        else:
+            return ("Fehler beim loeschen des Shops.")
+
+    return ("Thema wurde erfolgreich entfernt.")
 
 
 def search_for_purchase(iid):

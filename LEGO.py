@@ -1,7 +1,6 @@
 import csv
 import tkinter
 
-
 from tkinter import *
 from tkinter import ttk, messagebox
 from tkinter.ttk import Notebook, Treeview
@@ -14,8 +13,6 @@ from functions import *
 import sqlite3, db_create_table
 
 
-
-
 class UserInterface:
 
     def __init__(self):
@@ -24,7 +21,7 @@ class UserInterface:
         self.root = tkinter.Tk()
         self.root.title(' ')
         self.root.geometry('990x500')
-        self.root.resizable(False,False)
+        self.root.resizable(False, False)
 
         ############### FRAMES ##############
         self.topTapFrame = Frame(self.root)
@@ -60,7 +57,7 @@ class UserInterface:
         my_menu.add_cascade(label="Info", menu=info_menu)
 
         file_menu.add_command(label="Export as CSV", command=lambda: self.fill_messagebox(self.save_csv()))
-        file_menu.add_command(label="Exit", command=lambda:[db.close(), self.root.quit()])
+        file_menu.add_command(label="Exit", command=lambda: [db.close(), self.root.quit()])
 
         add_menu.add_command(label="Add Record", command=self.add_record)
         add_menu.add_command(label="Add Shop", command=self.add_shop)
@@ -83,7 +80,7 @@ class UserInterface:
         filter_menu.add_command(label="Refresh Table", command=lambda: self.fill_purchase_table(NONE, 'purchaseID'))
 
         ############# HEADLINE ##############
-        self.headline = Label(self.topTapFrame, text="Lego Portfolio",font=("arial italic", 12) )
+        self.headline = Label(self.topTapFrame, text="Lego Portfolio", font=("arial italic", 12))
         self.headline.pack(pady=5)
 
         ############ BUTTONS ###########
@@ -125,8 +122,6 @@ class UserInterface:
             else:
                 self.tree.configure(yscrollcommand="")
                 self.vsb.destroy()
-
-
 
         self.tree['columns'] = ("ID", "NAME", "THEME", "RETAIL", "COST", "RELEASE", "DATE", "DISCOUNT", "IID")
 
@@ -189,7 +184,7 @@ class UserInterface:
     def open_details(self):
         self.topWinDetails = Toplevel()
         self.topWinDetails.title("SET DETAILS")
-        self.topWinDetails.resizable(False,False)
+        self.topWinDetails.resizable(False, False)
 
         ########### FRAMES #############
         self.headFrame = Frame(self.topWinDetails)
@@ -278,7 +273,7 @@ class UserInterface:
     def add_record(self):
         addRecTopWin = Toplevel()
         addRecTopWin.title("ADD RECORD")
-        addRecTopWin.resizable(False,False)
+        addRecTopWin.resizable(False, False)
 
         def callback_theme(*args):
             if self.themeVar.get() == 'Neues Thema anlegen':
@@ -294,21 +289,20 @@ class UserInterface:
             root2.title("Calender")
             root2.geometry("300x250")
             cal = tkcalendar.Calendar(root2, selectmode='day',
-                           year=today.year, month=today.month,
-                           day=today.day, date_pattern= "dd.MM.yyyy")
+                                      year=today.year, month=today.month,
+                                      day=today.day, date_pattern="dd.MM.yyyy")
             cal.pack(pady=10)
+
             def grad_date():
                 date.config(text="Selected Date is: " + cal.get_date())
                 dateBox.delete(0, tkinter.END)
                 dateBox.insert(0, cal.get_date())
 
-
             # Add Button and Label
             Button(root2, text="Get Date",
-                   command=lambda:[grad_date(),root2.destroy()]).pack(pady=10)
+                   command=lambda: [grad_date(), root2.destroy()]).pack(pady=10)
             date = Label(root2, text="")
             date.pack(pady=10)
-
 
         ########### FRAMES #############
         sucheLabel = LabelFrame(addRecTopWin, text="Suche (SET ID)")
@@ -374,17 +368,17 @@ class UserInterface:
         costbox = Entry(portfolioData)
         costbox.grid(row=2, column=0)
         dateLabel = Label(portfolioData, text="PURCHASE DATE")
-        dateLabel.grid(row=1, column=1, sticky=W,padx=(6,0),columnspan=2)
+        dateLabel.grid(row=1, column=1, sticky=W, padx=(6, 0), columnspan=2)
         dateBox = Entry(portfolioData)
-        dateBox.grid(row=2, column=1, padx=0,sticky=W+E)
+        dateBox.grid(row=2, column=1, padx=0, sticky=W + E)
         dateBox.config(width=17)
         dateBox.insert(0, datetime.date.today().strftime("%d.%m.%Y"))
         image1 = Image.open("images/calender-icon.png")
         cal_img = ImageTk.PhotoImage(image1)
-        dateButton = Button(portfolioData, command=show_calendar, image=cal_img,height=17,borderwidth=0.5)
+        dateButton = Button(portfolioData, command=show_calendar, image=cal_img, height=17, borderwidth=0.5)
         dateButton.image = cal_img
-        dateButton.grid(row=2, column=2,padx=(0,6),sticky=W+S)
-        dateBox.grid(row=2, column=1,padx=(6,0))
+        dateButton.grid(row=2, column=2, padx=(0, 6), sticky=W + S)
+        dateBox.grid(row=2, column=1, padx=(6, 0))
         discountLabel = Label(portfolioData, text="DISCOUNT")
         discountLabel.grid(row=3, column=0, sticky=W, padx=6)
         discountBox = Entry(portfolioData)
@@ -395,7 +389,7 @@ class UserInterface:
         discount1Box.grid(row=6, column=0, padx=6)
         ######### SHOP ############
         shopLabel = Label(portfolioData, text="SHOP")
-        shopLabel.grid(row=3, column=1, sticky=W, padx=(6,0),columnspan=2)
+        shopLabel.grid(row=3, column=1, sticky=W, padx=(6, 0), columnspan=2)
         self.shopChoices = [' ', 'Neuen Shop anlegen']
         for index in get_shop_list():
             self.shopChoices.append(index)
@@ -403,13 +397,13 @@ class UserInterface:
         self.shopVar.set(self.shopChoices[0])
         shopBox = OptionMenu(portfolioData, self.shopVar, *self.shopChoices)
         shopBox.config(width=16, borderwidth=0.5)
-        shopBox.grid(row=4, column=1, padx=(6,0),columnspan=2,sticky=W+S)
+        shopBox.grid(row=4, column=1, padx=(6, 0), columnspan=2, sticky=W + S)
         self.shopVar.trace("w", callback_shop)
         ############################
         amountLabel = Label(portfolioData, text="AMOUNT")
-        amountLabel.grid(row=5, column=1, sticky=W, padx=(6,0))
+        amountLabel.grid(row=5, column=1, sticky=W, padx=(6, 0))
         amountBox = Spinbox(portfolioData, from_=1, to=25, width=18)
-        amountBox.grid(row=6, column=1, padx=(6,0),columnspan=2)
+        amountBox.grid(row=6, column=1, padx=(6, 0), columnspan=2)
         avePriceLabel = Label(portfolioData, text="AVE PRICE")
         avePriceLabel.grid(row=7, column=0, sticky=W, padx=6)
         avePriceBox = Entry(portfolioData)
@@ -435,7 +429,7 @@ class UserInterface:
     def open_stats(self):
         statsTopWin = Toplevel(self.root)
         statsTopWin.title("Statistics")
-        statsTopWin.resizable(False,False)
+        statsTopWin.resizable(False, False)
 
         ########### FRAMES ############
         topFrame = Frame(statsTopWin)
@@ -464,7 +458,7 @@ class UserInterface:
 
         topWinDatabase = Toplevel()
         topWinDatabase.title("DATABASE SETTINGS")
-        topWinDatabase.resizable(False,False)
+        topWinDatabase.resizable(False, False)
         tabControl = Notebook(topWinDatabase)
 
         ########### FRAMES ################
@@ -649,12 +643,14 @@ class UserInterface:
         # Themes
         expand_to_add_ThBut = Button(buttonFrameTh, text="ADD THEME", width=15, command=add_window_th)
         expand_to_add_ThBut.grid(row=0, pady=5, padx=15)
-        remove_thBut = Button(buttonFrameTh, text="REMOVE THEME", width=15)
+        remove_thBut = Button(buttonFrameTh, text="REMOVE THEME", width=15,
+                              command=lambda: [self.delete_theme(self.selectItem3()), update_tables()])
         remove_thBut.grid(row=1, padx=15)
         # Shop
         expand_to_add_shBut = Button(buttonFrameSh, text="ADD SHOP", width=15, command=add_window_sh)
         expand_to_add_shBut.grid(row=0, pady=5, padx=15)
-        remove_shBut = Button(buttonFrameSh, text="REMOVE SHOP", width=15)
+        remove_shBut = Button(buttonFrameSh, text="REMOVE SHOP", width=15,
+                              command=lambda: [self.delete_shop(self.selectItem2()), update_tables()])
         remove_shBut.grid(row=1, padx=15)
 
         update_tables()
@@ -662,7 +658,7 @@ class UserInterface:
     def add_theme(self):
         newThemeTopWin = Toplevel()
         newThemeTopWin.title("New Theme")
-        newThemeTopWin.resizable(False,False)
+        newThemeTopWin.resizable(False, False)
         nameLabel = Label(newThemeTopWin, text="Name")
         nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=5)
         nameBox = Entry(newThemeTopWin)
@@ -684,7 +680,7 @@ class UserInterface:
     def add_shop(self):
         newShopTopWin = Toplevel()
         newShopTopWin.title("New Shop")
-        newShopTopWin.resizable(False,False)
+        newShopTopWin.resizable(False, False)
         nameLabel = Label(newShopTopWin, text="Name")
         nameLabel.grid(row=0, column=0, sticky=W, pady=5, padx=5)
         nameBox = Entry(newShopTopWin)
@@ -866,10 +862,44 @@ class UserInterface:
             print(e)
             self.fill_messagebox("Bitte Eintrag zum loeschen waehlen.")
 
+    def delete_shop(self, values):
+        text = ""
+        try:
+            text = delete_shop_from_db(values[0])
+            self.fill_messagebox(text)
+        except Exception as e:
+            print(e)
+            if str(e) == "string index out of range":
+                self.fill_messagebox("Bitte Eintrag zum loeschen waehlen.")
+            else:
+                self.fill_messagebox(text)
+
+    def delete_theme(self, values):
+        text = ""
+        try:
+            text = delete_theme_from_db(values[0])
+            self.fill_messagebox(text)
+        except Exception as e:
+            print(e)
+            if str(e) == "string index out of range":
+                self.fill_messagebox("Bitte Eintrag zum loeschen waehlen.")
+            else:
+                self.fill_messagebox(text)
+
     def selectItem(self):
         curItem = self.tree.focus()
         print(self.tree.item(curItem)['values'])
         return self.tree.item(curItem)['values']
+
+    def selectItem2(self):
+        curItem = self.shopTree.focus()
+        print(self.shopTree.item(curItem)['values'])
+        return self.shopTree.item(curItem)['values']
+
+    def selectItem3(self):
+        curItem = self.themeTree.focus()
+        print(self.themeTree.item(curItem)['values'])
+        return self.themeTree.item(curItem)['values']
 
     def double_click(self, event):
         self.open_details()
@@ -917,7 +947,7 @@ class UserInterface:
 
         return (f"Alle Sets mit dem Thema '{var}' werden angezeigt.")
 
-    def format_date(self,date):
+    def format_date(self, date):
         datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
         datetimeobject = datetimeobject.strftime('%Y-%m-%d')
         print(datetimeobject)
@@ -925,7 +955,7 @@ class UserInterface:
 
 
 if __name__ == '__main__':
-    #db = sqlite3.connect('lego_db')
-    db=db_conn.db
+    # db = sqlite3.connect('lego_db')
+    db = db_conn.db
     db_create_table.create_table(db)
     gui = UserInterface()
