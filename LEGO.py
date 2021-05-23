@@ -40,7 +40,8 @@ class UserInterface:
         self.footerFrame.grid(row=3)
 
         ############# MENUE ###############
-
+        global color
+        color = ["grey85", "white"]
         my_menu = tkinter.Menu(self.root, relief=FLAT)
         self.root.config(menu=my_menu)
 
@@ -48,12 +49,14 @@ class UserInterface:
         filter_menu = Menu(my_menu, tearoff=False)
         navi_menu = Menu(my_menu, tearoff=False)
         add_menu = Menu(my_menu, tearoff=False)
+        color_menu = Menu(my_menu, tearoff=False)
         info_menu = Menu(my_menu, tearoff=False)
 
         my_menu.add_cascade(label="File", menu=file_menu)
         my_menu.add_cascade(label="Add", menu=add_menu)
         my_menu.add_cascade(label="Filter", menu=filter_menu)
         my_menu.add_cascade(label="Navigate", menu=navi_menu)
+        my_menu.add_cascade(label="Colour", menu=color_menu)
         my_menu.add_cascade(label="Info", menu=info_menu)
 
         file_menu.add_command(label="Export as CSV", command=lambda: self.fill_messagebox(self.save_csv()))
@@ -66,6 +69,25 @@ class UserInterface:
         navi_menu.add_command(label="Statistics", command=self.open_stats)
         navi_menu.add_command(label="Database", command=self.edit_database)
         navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("https://www.chess.com/home"))
+
+        color_menu.add_command(label="Purple",
+                               command=lambda: [set_color("Purple"), self.fill_purchase_table(NONE, 'purchaseID')])
+        color_menu.add_command(label="Peach",
+                               command=lambda: [set_color("Peach"), self.fill_purchase_table(NONE, 'purchaseID')])
+        color_menu.add_command(label="Skyblue",
+                               command=lambda: [set_color("Skyblue"), self.fill_purchase_table(NONE, 'purchaseID')])
+        color_menu.add_command(label="Normal",
+                               command=lambda: [set_color("Normal"), self.fill_purchase_table(NONE, 'purchaseID')])
+
+        def set_color(col):
+            global color
+            col_dict = {"Purple" : ["MediumPurple1", "thistle1"],
+                    "Peach" : ["peach puff", "light cyan"],
+                    "Skyblue" : ["SkyBlue1", "ghost white"],
+                    "Normal" : ["grey85", "white"],
+                    }
+            color = col_dict[col]
+
 
         self.d = {}
         count = 0
@@ -828,10 +850,17 @@ class UserInterface:
 
     def fill_purchase_table(self, filter, order):
         global count
+        global color
+        col_schema1 = ["grey85", "white"]
+        col_schema1 = ["MediumPurple1", "thistle1"]
+        col_schema1 = ["peach puff", "light cyan"]
+        col_schema1 = ["SkyBlue1", "ghost white"]
+        col_schema1 = ["tomato3", "gold2"]
+
         count = 0
         self.tree.delete(*self.tree.get_children())
-        self.tree.tag_configure('oddrow', background="grey85")
-        self.tree.tag_configure('evenrow', background="white")
+        self.tree.tag_configure('oddrow', background=color[0])
+        self.tree.tag_configure('evenrow', background=color[1])
         list = get_purchase_records(filter, order)
         for data in list:
             date_conv = str(data[1].strftime("%d.%m.%Y"))
