@@ -45,6 +45,7 @@ def create_table(db):
                 );
                 ''')
 
+
     db.commit()
     c.close()
     #db.close()

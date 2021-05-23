@@ -266,4 +266,5 @@ def search_for_purchase(iid):
     result = cursor.fetchall()
     cursor.close()
 
+
     return result

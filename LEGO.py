@@ -757,6 +757,7 @@ class UserInterface:
             dis = float(self.discountBox.get()[:-2]) / 100 * float(str(self.setRetailBox.get()[:-2]).replace(',', '.'))
             self.discount1Box.insert(END, str(round(dis, 2)) + " €")
 
+
         except Exception as e:
             print(e)
             self.topWinDetails.destroy()
