@@ -68,7 +68,7 @@ class UserInterface:
 
         navi_menu.add_command(label="Statistics", command=self.open_stats)
         navi_menu.add_command(label="Database", command=self.edit_database)
-        navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("https://www.chess.com/home"))
+        navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("http://ec2-18-204-13-164.compute-1.amazonaws.com:80/"))
 
         color_menu.add_command(label="Purple",
                                command=lambda: [set_color("Purple"), self.fill_purchase_table(NONE, 'purchaseID')])
@@ -81,13 +81,12 @@ class UserInterface:
 
         def set_color(col):
             global color
-            col_dict = {"Purple" : ["MediumPurple1", "thistle1"],
-                    "Peach" : ["peach puff", "light cyan"],
-                    "Skyblue" : ["SkyBlue1", "ghost white"],
-                    "Normal" : ["grey85", "white"],
-                    }
+            col_dict = {"Purple": ["MediumPurple1", "thistle1"],
+                        "Peach": ["peach puff", "light cyan"],
+                        "Skyblue": ["SkyBlue1", "ghost white"],
+                        "Normal": ["grey85", "white"],
+                        }
             color = col_dict[col]
-
 
         self.d = {}
         count = 0
@@ -851,12 +850,6 @@ class UserInterface:
     def fill_purchase_table(self, filter, order):
         global count
         global color
-        col_schema1 = ["grey85", "white"]
-        col_schema1 = ["MediumPurple1", "thistle1"]
-        col_schema1 = ["peach puff", "light cyan"]
-        col_schema1 = ["SkyBlue1", "ghost white"]
-        col_schema1 = ["tomato3", "gold2"]
-
         count = 0
         self.tree.delete(*self.tree.get_children())
         self.tree.tag_configure('oddrow', background=color[0])

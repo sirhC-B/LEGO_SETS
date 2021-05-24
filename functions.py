@@ -92,7 +92,6 @@ def add_set_to_DB(id, name, retail, theme, release, subtheme):
             c.execute(f"SELECT themeid FROM lego_themes WHERE themename='{theme}';")
             themeid = c.fetchone()
 
-
             retail_float = float(retail[:-2].replace(",", "."))
 
             c.execute(f"""INSERT INTO lego_sets VALUES ('{id}','{name}','{retail_float}','{release}','{themeid[0]}'
@@ -103,12 +102,13 @@ def add_set_to_DB(id, name, retail, theme, release, subtheme):
 
 
         except Exception as e:
-            print(e)
-            text += f"Das Set {id} ist bereits in der Datenbank vorhanden."
-
-        except Exception as e:
-            print(format(e))
-            text += "Fehler beim anlegen des Sets."
+            print(type(e))
+            if str(type(e)) == "<class 'psycopg2.errors.UniqueViolation'>":
+                text += f"Das Set {id} ist bereits in der Datenbank vorhanden."
+            elif str(type(e)) == "<class 'ValueError'>":
+                text += f"Bitte fuellen sie die Felder mit ein richtigen Datentypen."
+            else:
+                text += "Fehler beim anlegen des Sets."
 
         finally:
             return text
@@ -123,9 +123,13 @@ def add_purchase_to_db(cost, date, shop, amount, id, retail, name, theme, releas
             print(get_set_list())
             text += add_set_to_DB(id, name, retail, theme, release, subtheme) + "\n"
 
-        retail = float(str(retail).replace(',', '.')[:-2])
-        cost = float(str(cost).replace(',', '.'))
-        discountP = round((1 - (cost / retail)) * 100, 2)
+        try:
+            retail = float(str(retail).replace(',', '.')[:-2])
+            cost = float(str(cost).replace(',', '.'))
+            discountP = round((1 - (cost / retail)) * 100, 2)
+        except Exception as e:
+            print(e)
+            return "Bitte fuellen sie die Textfelder 'Retail' und 'Cost' mit einer Zahl."
 
         try:
             c = db.cursor()
