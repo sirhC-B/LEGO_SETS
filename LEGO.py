@@ -47,6 +47,11 @@ class UserInterface:
         self.footerFrame = Frame(self.root)
         self.footerFrame.grid(row=3)
 
+
+
+
+
+
         ############# MENUE ###############
         global color
         color = ["grey85", "white"]
@@ -64,7 +69,7 @@ class UserInterface:
         my_menu.add_cascade(label="Add", menu=add_menu)
         my_menu.add_cascade(label="Filter", menu=filter_menu)
         my_menu.add_cascade(label="Navigate", menu=navi_menu)
-        my_menu.add_cascade(label="Colour", menu=color_menu)
+        my_menu.add_cascade(label="Color", menu=color_menu)
         my_menu.add_cascade(label="Info", menu=info_menu)
 
         file_menu.add_command(label="Export as CSV", command=lambda: self.fill_messagebox(self.save_csv()))
@@ -76,7 +81,7 @@ class UserInterface:
 
         navi_menu.add_command(label="Statistics", command=self.open_stats)
         navi_menu.add_command(label="Database", command=self.edit_database)
-        navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("https://www.chess.com/home"))
+        navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("http://ec2-18-204-13-164.compute-1.amazonaws.com:80/"))
 
         color_menu.add_command(label="Purple",
                                command=lambda: [set_color("Purple"), self.fill_purchase_table(NONE, 'purchaseID')])
@@ -86,6 +91,8 @@ class UserInterface:
                                command=lambda: [set_color("Skyblue"), self.fill_purchase_table(NONE, 'purchaseID')])
         color_menu.add_command(label="Normal",
                                command=lambda: [set_color("Normal"), self.fill_purchase_table(NONE, 'purchaseID')])
+
+        info_menu.add_command(label="Open", command=self.open_info)
 
         def set_color(col):
             global color
@@ -114,7 +121,7 @@ class UserInterface:
         self.headline.pack(pady=5)
 
         ############ BUTTONS ###########
-        self.Button1 = Button(self.rightFrame, text="HINZU", width=18, pady=8, command=self.add_record)
+        self.Button1 = Button(self.rightFrame, text="ADD RECORD", width=18, pady=8, command=self.add_record)
         self.Button1.grid(row=0)
 
         self.Button2 = Button(self.rightFrame, text="DELETE", width=18, pady=8,
@@ -129,8 +136,10 @@ class UserInterface:
         self.Button4 = Button(self.rightFrame, text="STATISTIC", width=18, pady=8, command=self.open_stats)
         self.Button4.grid(row=3, pady=5)
 
-        self.Button5 = Button(self.rightFrame, text="SET DATABASE", width=18, pady=8, command=self.edit_database)
+        self.Button5 = Button(self.rightFrame, text="DATABASE", width=18, pady=8, command=self.edit_database)
         self.Button5.grid(row=4)
+
+
 
         ############ TREEVIEW #############
         self.tree = ttk.Treeview(self.treeFrame)
@@ -178,29 +187,91 @@ class UserInterface:
 
         ############ FOOTER ############
         self.textInfo = Text(self.footerFrame, height=7, width=90)
-        self.textInfo.grid(row=1, padx=20, pady=5)
-        # checkboxes
+        self.textInfo.grid(row=1, padx=(20,10), pady=5)
+
+        ########### SEARCH ############
+        def search(var):
+            query = self.searchentry.get()
+            if query:
+                selections = []
+                values = []
+                count = 0
+                for child in self.tree.get_children():
+                    if query.lower() in str(self.tree.item(child)['values']).lower():  # compare strings in  lower cases.
+                        values.append(self.tree.item(child)['values'])
+                        selections.append(child)
+                if not values:
+                    self.fill_messagebox(f"Keine Treffer fuer die Suche '{query}'.")
+                else:
+                    if var==1:
+                        self.tree.delete(*self.tree.get_children())
+                        for records in values:
+                            if count % 2 == 0:
+                                self.tree.insert("", 'end', values=records, tags=('evenrow',))
+                            else:
+                                self.tree.insert("", 'end', values=records, tags=('oddrow',))
+                            count += 1
+                        self.fill_messagebox(f"Ergebnisse fuer die Suche '{query}' wurden gefiltert.")
+                    else:
+                        self.tree.selection_set(selections)
+                        self.fill_messagebox(f"Ergebnisse fuer die Suche '{query}' wurden makiert.")
+            else:
+                self.fill_messagebox("Bitte Textfeld fuellen.")
+
+
+
+        def show_search():
+
+
+            if self.searchvar.get() == 1:
+                self.searchFrame = Frame(self.root)
+                self.searchFrame.grid(row=3, column=1, sticky=N + W, ipadx=5)
+                self.searchentryframe = LabelFrame(self.searchFrame, text="Search")
+                self.searchentryframe.grid()
+                self.searchentry = Entry(self.searchentryframe)
+                self.searchentry.config(width=15)
+                self.searchentry.grid(row=0, column=0, pady=5, padx=5, columnspan=2)
+                searchentrybut = Button(self.searchentryframe, text="Filter", command=lambda: search(1))
+                searchentrybut.grid(row=1, column=0, pady=(0, 10))
+                image1 = Image.open("images/search-icon.png")
+                src_img = ImageTk.PhotoImage(image1)
+
+                searchfilterbut = Button(self.searchentryframe, image=src_img, command=lambda: search(2))
+                searchfilterbut.grid(row=0, column=2, padx=(0,10))
+                searchfilterbut.image = src_img
+                searchresetbut = Button(self.searchentryframe, text="Reset",
+                                        command=lambda: self.fill_purchase_table(NONE, 'purchaseID'))
+                searchresetbut.grid(row=1, column=1, pady=(0, 10))
+            else:
+               self.searchFrame.destroy()
+
+        ############ checkboxes ##############
         dupevar = IntVar()
         dupecheck = Checkbutton(self.checkFrame, text="Show Scrollbar", variable=dupevar, command=show_scrollbar)
-        dupecheck.grid(row=1, pady=3, sticky=W, padx=15)
+        dupecheck.grid(row=1,column=7, pady=3, sticky=W, padx=10)
         self.datevar = IntVar()
         datecheck = Checkbutton(self.checkFrame, text="Date", variable=self.datevar,
                                 command=lambda: self.checkbox_function("DATE"))
-        datecheck.grid(row=1, column=2, pady=3, padx=15)
+        datecheck.grid(row=1, column=2, pady=3, padx=10)
         self.yearvar = IntVar()
         yearcheck = Checkbutton(self.checkFrame, text="Year", variable=self.yearvar,
                                 command=lambda: self.checkbox_function("RELEASE"))
-        yearcheck.grid(row=1, column=3, pady=3, padx=15)
+        yearcheck.grid(row=1, column=3, pady=3, padx=10)
         self.retvar = IntVar()
         self.retvar.set(1)
         retailcheck = Checkbutton(self.checkFrame, text="Retail", variable=self.retvar,
                                   command=lambda: self.checkbox_function("RETAIL"))
-        retailcheck.grid(row=1, column=4, pady=3, padx=15)
+        retailcheck.grid(row=1, column=4, pady=3, padx=10)
         self.discvar = IntVar()
         self.discvar.set(1)
         disccheck = Checkbutton(self.checkFrame, text="Discount", variable=self.discvar,
                                 command=lambda: self.checkbox_function("DISCOUNT"))
-        disccheck.grid(row=1, column=5, pady=3, padx=15)
+        disccheck.grid(row=1, column=5, pady=3, padx=10)
+
+        self.searchvar = IntVar()
+        searchcheck = Checkbutton(self.checkFrame, text="Search", variable=self.searchvar,
+                                command=lambda: show_search())
+        searchcheck.grid(row=1, column=6, pady=3, padx=10)
 
         # dynamic columns
         self.columnlist = ["ID", "NAME", "THEME", "COST", "RETAIL", "DISCOUNT"]
@@ -317,7 +388,8 @@ class UserInterface:
             today = datetime.date.today()
             root2 = Tk()
             root2.title("Calender")
-            root2.geometry("300x250")
+            root2.geometry("300x250+200+200")
+            #root2.eval('tk::PlaceWindow . center')
             cal = tkcalendar.Calendar(root2, selectmode='day',
                                       year=today.year, month=today.month,
                                       day=today.day, date_pattern="dd.MM.yyyy")
@@ -528,6 +600,28 @@ class UserInterface:
         drop.grid(row=0, column=0, padx=(6, 0))
         #statistics_button.grid(row=0, column=1, padx=(0, 6))
         show_themes_chart()
+
+
+    def open_info(self):
+        topwininfo = Toplevel()
+        topwininfo.title("INFO")
+        topwininfo.resizable(False, False)
+        frame = Frame(topwininfo)
+        frame.pack()
+
+        textInfo = Text(frame,width=75,height=15)
+        textInfo.pack()
+        textInfo.insert(END,"""
+                             LEGOFOLIO - 2021.1
+        
+        
+        
+        contact:
+            kahf@th-brandenburg.de
+            boesener@th-brandenburg.de
+            diel@th-brandenburg.de
+        """)
+
 
 
     def edit_database(self):
@@ -909,12 +1003,6 @@ class UserInterface:
     def fill_purchase_table(self, filter, order):
         global count
         global color
-        col_schema1 = ["grey85", "white"]
-        col_schema1 = ["MediumPurple1", "thistle1"]
-        col_schema1 = ["peach puff", "light cyan"]
-        col_schema1 = ["SkyBlue1", "ghost white"]
-        col_schema1 = ["tomato3", "gold2"]
-
         count = 0
         self.tree.delete(*self.tree.get_children())
         self.tree.tag_configure('oddrow', background=color[0])
