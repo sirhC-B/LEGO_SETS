@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from tkinter import Tk, messagebox
 import psycopg2
 import os
@@ -14,7 +15,7 @@ load_dotenv()
 PASS = os.environ.get('PASS')
 try:
     db = psycopg2.connect(host=ENDPOINT, port=PORT, database=DBNAME, user=USR, password=PASS)
-    db.autocommit =True;
+    db.autocommit = True;
 except Exception as e:
     rootWin = Tk()
     rootWin.withdraw()
@@ -22,11 +23,4 @@ except Exception as e:
                          parent=rootWin)
     rootWin.destroy()
 
-# themeNameTO = "THEMA!"
-# subThemeTO=""
-# c = db.cursor()
-# c.execute(f"""INSERT INTO lego_themes(themeName, subTheme) VALUES ('{themeNameTO}','{subThemeTO}'
-#                )""")
-# db.commit()
-# c.close()
-# db.close()
+

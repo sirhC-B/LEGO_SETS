@@ -1,14 +1,22 @@
 import csv
 import tkinter
+from pandas import DataFrame
 
 from tkinter import *
+import tkinter as tk2
 from tkinter import ttk, messagebox
+import tkinter as tk_pie
 from tkinter.ttk import Notebook, Treeview
+
+import matplotlib
+import matplotlib.figure as figu
+import tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import datetime
 import webbrowser
 import tkcalendar
 from PIL import ImageTk, Image
-
+import matplotlib.pyplot as plt
 from functions import *
 import sqlite3, db_create_table
 
@@ -81,13 +89,12 @@ class UserInterface:
 
         def set_color(col):
             global color
-            col_dict = {"Purple" : ["MediumPurple1", "thistle1"],
-                    "Peach" : ["peach puff", "light cyan"],
-                    "Skyblue" : ["SkyBlue1", "ghost white"],
-                    "Normal" : ["grey85", "white"],
-                    }
+            col_dict = {"Purple": ["MediumPurple1", "thistle1"],
+                        "Peach": ["peach puff", "light cyan"],
+                        "Skyblue": ["SkyBlue1", "ghost white"],
+                        "Normal": ["grey85", "white"],
+                        }
             color = col_dict[col]
-
 
         self.d = {}
         count = 0
@@ -452,25 +459,76 @@ class UserInterface:
     def open_stats(self):
         statsTopWin = Toplevel(self.root)
         statsTopWin.title("Statistics")
-        statsTopWin.resizable(False, False)
+        statsTopWin.configure(bg="white")
+        statsTopWin.state("zoomed")
+
+        # statsTopWin.resizable(False, False)
 
         ########### FRAMES ############
         topFrame = Frame(statsTopWin)
-        topFrame.grid(row=0)
+        topFrame.configure(bg="white")
+        topFrame.pack()
         mainFrame = Frame(statsTopWin)
-        mainFrame.grid(row=2)
+        mainFrame.configure(bg="white")
+        mainFrame.pack()
+
+        def show_themes_chart():
+            fig = matplotlib.figure.Figure(figsize=(18, 12))
+            ax = fig.add_subplot(111)
+
+            # Themen
+            themen = get_lego_purchas_pie()
+            ax.pie(themen.values(), labels=themen.keys(), autopct='%1.1f%%')
+            ax.legend(themen.keys(), loc="lower right")
+
+            circle = matplotlib.patches.Circle((0, 0), 0.75, color='white')
+            ax.add_artist(circle)
+            ax.set_title("sold sets per theme")
+
+            for widget in mainFrame.winfo_children():
+                widget.destroy()
+            # window = tk_pie.Tk()
+            window = mainFrame
+            canvas = FigureCanvasTkAgg(fig, master=window)
+            canvas.get_tk_widget().pack()
+            canvas.draw()
+            window.mainloop()
+
+        def show_sum_chart():
+            data1 = get_retail_pie_dic_ar()
+            df1 = DataFrame(data1, columns=['Datum', 'sum'])
+            for widget in mainFrame.winfo_children():
+                widget.destroy()
+            window = mainFrame
+            figure1 = matplotlib.figure.Figure(figsize=(17, 12), dpi=100)
+            ax1 = figure1.add_subplot(111)
+            bar1 = FigureCanvasTkAgg(figure1, window)
+            bar1.get_tk_widget().pack()
+
+            df1 = df1[['Datum', 'sum']].groupby('Datum').sum()
+            df1.plot(kind='bar', legend=True, ax=ax1)
+            ax1.set_title("sum in the last 7 days")
+            window.mainloop()
+
+        def change_dropdown(*args):
+            if dropText.get() == "Themes":
+                show_themes_chart()
+            elif dropText.get() == "Worth":
+                show_sum_chart()
 
         ########## DROPDOWN ##########
-        dropText = StringVar()
-        dropText.set("General")
-        options = {'General', 'Themes', 'Worth'}
-        drop = OptionMenu(topFrame, dropText, *options)
-        drop.config(borderwidth=1)
-        drop.pack()
+        dropText = StringVar(topFrame)
+        options = {'Themes', 'Worth'}
+        dropText.set('Themes')
+        drop = OptionMenu(topFrame, dropText, *options,command=change_dropdown)
+        drop.configure(bg="white")
+        drop["menu"].configure(bg="white")
+        drop.config(borderwidth=0)
+        #statistics_button = tkinter.Button(topFrame, text='Submit', command=print_retail_bar_chart, bg="white")
+        drop.grid(row=0, column=0, padx=(6, 0))
+        #statistics_button.grid(row=0, column=1, padx=(0, 6))
+        show_themes_chart()
 
-        ########### GRAPH ############
-        spaceHolder = Label(mainFrame, text="HIER WERDEN SPAETER DIE STATS GEZEIGT")
-        spaceHolder.pack(padx=20, pady=100)
 
     def edit_database(self):
 

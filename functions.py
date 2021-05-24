@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 import re
-
 import LEGO
 import db_conn
 from LEGO import *
+from datetime import datetime, timedelta, date
 
 global db
 db = db_conn.db
@@ -91,7 +91,6 @@ def add_set_to_DB(id, name, retail, theme, release, subtheme):
 
             c.execute(f"SELECT themeid FROM lego_themes WHERE themename='{theme}';")
             themeid = c.fetchone()
-
 
             retail_float = float(retail[:-2].replace(",", "."))
 
@@ -218,7 +217,6 @@ def get_purchase_records(filter, order='purchaseID'):
                             ORDER BY {order} """)
     purchaseList = cursor.fetchall()
 
-
     db.commit()
     cursor.close()
 
@@ -259,10 +257,10 @@ def delete_purchase_from_db(iid):
 
 def delete_shop_from_db(iid):
     try:
-            cursor = db.cursor()
-            cursor.execute(f"""DELETE FROM lego_shops WHERE shopName='{iid}'; """)
-            db.commit()
-            cursor.close()
+        cursor = db.cursor()
+        cursor.execute(f"""DELETE FROM lego_shops WHERE shopName='{iid}'; """)
+        db.commit()
+        cursor.close()
 
     except Exception as e:
         print(e)
@@ -272,6 +270,7 @@ def delete_shop_from_db(iid):
             return ("Fehler beim loeschen des Shops.")
 
     return ("Shop wurde erfolgreich entfernt.")
+
 
 def delete_theme_from_db(iid):
     try:
@@ -298,6 +297,64 @@ def search_for_purchase(iid):
                         WHERE purchaseID='{iid}'; """)
     result = cursor.fetchall()
     cursor.close()
-
-
     return result
+
+
+def get_lego_purchas_pie():
+    cursor = db.cursor()
+    cursor.execute("""SELECT  Distinct(themename)  FROM lego_purchases
+                    JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+					JOIN lego_themes ON lego_sets.settheme = lego_themes.themeid""")
+    db_data = cursor.fetchall()
+    themen = {}
+    for x in db_data:
+        themen.update({x[0]: 0})
+    for y in themen:
+        cursor.execute(f"""SELECT  count((settheme)) FROM lego_purchases
+                        JOIN lego_sets ON lego_purchases.purchaseSet = lego_sets.setID
+                        JOIN lego_themes ON lego_sets.settheme = lego_themes.themeid
+                        WHERE themename='{y}' 
+                        """)
+        themen[y] = int(cursor.fetchone()[0])
+    cursor.close()
+    return themen
+
+
+def get_retail_pie():
+    last_7days = {}
+    for i in range(7):
+        last_7days.update({date.today() - timedelta(days=i): 0})
+
+    cursor = db.cursor()
+    for day in last_7days:
+        cursor.execute(f"""SELECT  cast(sum(purchaseprice*purchaseamount) as integer) FROM lego_purchases
+                        WHERE purchasedate='{day}'
+                        """)
+        sum = (cursor.fetchone()[0])
+        if sum:
+            last_7days[day] = sum
+    cursor.close()
+
+    return last_7days
+
+def get_retail_pie_dic_ar():
+    last_7days = {}
+    tmp_array = [None] * 7
+    for i in range(7):
+        tmp_array[i] = date.today() - timedelta(days=i)
+    last_7days.update({"Datum": tmp_array})
+
+    tmp_array2 = [0] * 7
+    cursor = db.cursor()
+    for i in range(7):
+        cursor.execute(f"""
+        SELECT  cast(sum(purchaseprice*purchaseamount) as integer) FROM lego_purchases
+                        WHERE purchasedate='{tmp_array[i]}'
+                        """)
+        sum = (cursor.fetchone()[0])
+        if sum:
+            tmp_array2[i] = sum
+    last_7days.update({"sum": tmp_array2})
+    cursor.close()
+
+    return last_7days
