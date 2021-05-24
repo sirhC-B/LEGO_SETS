@@ -7,18 +7,19 @@ import tkinter as tk2
 from tkinter import ttk, messagebox
 import tkinter as tk_pie
 from tkinter.ttk import Notebook, Treeview
-
+from datetime import date
 import matplotlib
 import matplotlib.figure as figu
 import tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import datetime
+# import datetime
 import webbrowser
 import tkcalendar
 from PIL import ImageTk, Image
 import matplotlib.pyplot as plt
 from functions import *
-import sqlite3, db_create_table
+import db_create_table
+from datetime import datetime, timedelta, date
 
 
 class UserInterface:
@@ -46,11 +47,6 @@ class UserInterface:
 
         self.footerFrame = Frame(self.root)
         self.footerFrame.grid(row=3)
-
-
-
-
-
 
         ############# MENUE ###############
         global color
@@ -81,7 +77,8 @@ class UserInterface:
 
         navi_menu.add_command(label="Statistics", command=self.open_stats)
         navi_menu.add_command(label="Database", command=self.edit_database)
-        navi_menu.add_command(label="Web Version", command=lambda: webbrowser.open("http://ec2-18-204-13-164.compute-1.amazonaws.com:80/"))
+        navi_menu.add_command(label="Web Version",
+                              command=lambda: webbrowser.open("http://ec2-18-204-13-164.compute-1.amazonaws.com:80/"))
 
         color_menu.add_command(label="Purple",
                                command=lambda: [set_color("Purple"), self.fill_purchase_table(NONE, 'purchaseID')])
@@ -139,8 +136,6 @@ class UserInterface:
         self.Button5 = Button(self.rightFrame, text="DATABASE", width=18, pady=8, command=self.edit_database)
         self.Button5.grid(row=4)
 
-
-
         ############ TREEVIEW #############
         self.tree = ttk.Treeview(self.treeFrame)
         self.tree.grid(row=0, column=0, pady=5, padx=(20, 0))
@@ -187,7 +182,7 @@ class UserInterface:
 
         ############ FOOTER ############
         self.textInfo = Text(self.footerFrame, height=7, width=90)
-        self.textInfo.grid(row=1, padx=(20,10), pady=5)
+        self.textInfo.grid(row=1, padx=(20, 10), pady=5)
 
         ########### SEARCH ############
         def search(var):
@@ -197,13 +192,14 @@ class UserInterface:
                 values = []
                 count = 0
                 for child in self.tree.get_children():
-                    if query.lower() in str(self.tree.item(child)['values']).lower():  # compare strings in  lower cases.
+                    if query.lower() in str(
+                            self.tree.item(child)['values']).lower():  # compare strings in  lower cases.
                         values.append(self.tree.item(child)['values'])
                         selections.append(child)
                 if not values:
                     self.fill_messagebox(f"Keine Treffer fuer die Suche '{query}'.")
                 else:
-                    if var==1:
+                    if var == 1:
                         self.tree.delete(*self.tree.get_children())
                         for records in values:
                             if count % 2 == 0:
@@ -218,10 +214,7 @@ class UserInterface:
             else:
                 self.fill_messagebox("Bitte Textfeld fuellen.")
 
-
-
         def show_search():
-
 
             if self.searchvar.get() == 1:
                 self.searchFrame = Frame(self.root)
@@ -237,18 +230,18 @@ class UserInterface:
                 src_img = ImageTk.PhotoImage(image1)
 
                 searchfilterbut = Button(self.searchentryframe, image=src_img, command=lambda: search(2))
-                searchfilterbut.grid(row=0, column=2, padx=(0,10))
+                searchfilterbut.grid(row=0, column=2, padx=(0, 10))
                 searchfilterbut.image = src_img
                 searchresetbut = Button(self.searchentryframe, text="Reset",
                                         command=lambda: self.fill_purchase_table(NONE, 'purchaseID'))
                 searchresetbut.grid(row=1, column=1, pady=(0, 10))
             else:
-               self.searchFrame.destroy()
+                self.searchFrame.destroy()
 
         ############ checkboxes ##############
         dupevar = IntVar()
         dupecheck = Checkbutton(self.checkFrame, text="Show Scrollbar", variable=dupevar, command=show_scrollbar)
-        dupecheck.grid(row=1,column=7, pady=3, sticky=W, padx=10)
+        dupecheck.grid(row=1, column=7, pady=3, sticky=W, padx=10)
         self.datevar = IntVar()
         datecheck = Checkbutton(self.checkFrame, text="Date", variable=self.datevar,
                                 command=lambda: self.checkbox_function("DATE"))
@@ -270,7 +263,7 @@ class UserInterface:
 
         self.searchvar = IntVar()
         searchcheck = Checkbutton(self.checkFrame, text="Search", variable=self.searchvar,
-                                command=lambda: show_search())
+                                  command=lambda: show_search())
         searchcheck.grid(row=1, column=6, pady=3, padx=10)
 
         # dynamic columns
@@ -385,11 +378,11 @@ class UserInterface:
                 self.add_shop()
 
         def show_calendar():
-            today = datetime.date.today()
+            today = datetime.today()
             root2 = Tk()
             root2.title("Calender")
             root2.geometry("300x250+200+200")
-            #root2.eval('tk::PlaceWindow . center')
+            # root2.eval('tk::PlaceWindow . center')
             cal = tkcalendar.Calendar(root2, selectmode='day',
                                       year=today.year, month=today.month,
                                       day=today.day, date_pattern="dd.MM.yyyy")
@@ -474,7 +467,7 @@ class UserInterface:
         dateBox = Entry(portfolioData)
         dateBox.grid(row=2, column=1, padx=0, sticky=W + E)
         dateBox.config(width=17)
-        dateBox.insert(0, datetime.date.today().strftime("%d.%m.%Y"))
+        dateBox.insert(0, date.today().strftime("%d.%m.%Y"))
         image1 = Image.open("images/calender-icon.png")
         cal_img = ImageTk.PhotoImage(image1)
         dateButton = Button(portfolioData, command=show_calendar, image=cal_img, height=17, borderwidth=0.5)
@@ -525,9 +518,8 @@ class UserInterface:
                                                                                      self.subThemeBox.get())),
                                              self.fill_purchase_table(NONE, 'purchaseID'), costbox.delete(0, END)])
         takeSetBut.grid(padx=5, row=0, column=0, pady=6)
-        goBackBut = Button(footerFrame, text="Return")
-        goBackBut.grid(padx=5, row=0, column=1, pady=6)
-
+        #goBackBut = Button(footerFrame, text="Return")
+        #goBackBut.grid(padx=5, row=0, column=1, pady=6)
     def open_stats(self):
         statsTopWin = Toplevel(self.root)
         statsTopWin.title("Statistics")
@@ -572,7 +564,7 @@ class UserInterface:
             for widget in mainFrame.winfo_children():
                 widget.destroy()
             window = mainFrame
-            figure1 = matplotlib.figure.Figure(figsize=(17, 12), dpi=100)
+            figure1 = matplotlib.figure.Figure(figsize=(14, 10), dpi=100)
             ax1 = figure1.add_subplot(111)
             bar1 = FigureCanvasTkAgg(figure1, window)
             bar1.get_tk_widget().pack()
@@ -592,15 +584,14 @@ class UserInterface:
         dropText = StringVar(topFrame)
         options = {'Themes', 'Worth'}
         dropText.set('Themes')
-        drop = OptionMenu(topFrame, dropText, *options,command=change_dropdown)
+        drop = OptionMenu(topFrame, dropText, *options, command=change_dropdown)
         drop.configure(bg="white")
         drop["menu"].configure(bg="white")
         drop.config(borderwidth=0)
-        #statistics_button = tkinter.Button(topFrame, text='Submit', command=print_retail_bar_chart, bg="white")
+        # statistics_button = tkinter.Button(topFrame, text='Submit', command=print_retail_bar_chart, bg="white")
         drop.grid(row=0, column=0, padx=(6, 0))
-        #statistics_button.grid(row=0, column=1, padx=(0, 6))
+        # statistics_button.grid(row=0, column=1, padx=(0, 6))
         show_themes_chart()
-
 
     def open_info(self):
         topwininfo = Toplevel()
@@ -609,9 +600,9 @@ class UserInterface:
         frame = Frame(topwininfo)
         frame.pack()
 
-        textInfo = Text(frame,width=75,height=15)
+        textInfo = Text(frame, width=75, height=15)
         textInfo.pack()
-        textInfo.insert(END,"""
+        textInfo.insert(END, """
                              LEGOFOLIO - 2021.1
         
         
@@ -621,8 +612,6 @@ class UserInterface:
             boesener@th-brandenburg.de
             diel@th-brandenburg.de
         """)
-
-
 
     def edit_database(self):
 
@@ -1084,7 +1073,7 @@ class UserInterface:
         self.fill_purchase_details(self.selectItem())
 
     def eol_calculator(self, release):
-        year = datetime.datetime.today().year
+        year = date.today().year
         lifetime = year - int(release)
 
         if lifetime <= 1:
@@ -1097,7 +1086,7 @@ class UserInterface:
         return eol
 
     def save_csv(self):
-        name = "Lego-" + str(datetime.date.today())
+        name = "Lego-" + str(date.today())
         with open(name, "w", newline='') as csv_file:
             csvwriter = csv.writer(csv_file, delimiter=',')
 
@@ -1130,7 +1119,7 @@ class UserInterface:
         return (f"Alle Sets mit dem Thema '{var}' werden angezeigt.")
 
     def format_date(self, date):
-        datetimeobject = datetime.datetime.strptime(date, '%d.%m.%Y')
+        datetimeobject = datetime.strptime(date, '%d.%m.%Y')
         datetimeobject = datetimeobject.strftime('%Y-%m-%d')
         print(datetimeobject)
         return datetimeobject
