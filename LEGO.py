@@ -183,7 +183,7 @@ class UserInterface:
 
         ########### SEARCH ############
         def search(var):
-            query = searchentry.get()
+            query = self.searchentry.get()
             if query:
                 selections = []
                 values = []
@@ -220,9 +220,9 @@ class UserInterface:
                 self.searchFrame.grid(row=3, column=1, sticky=N + W, ipadx=5)
                 self.searchentryframe = LabelFrame(self.searchFrame, text="Search")
                 self.searchentryframe.grid()
-                searchentry = Entry(self.searchentryframe)
-                searchentry.config(width=15)
-                searchentry.grid(row=0, column=0, pady=5, padx=5, columnspan=2)
+                self.searchentry = Entry(self.searchentryframe)
+                self.searchentry.config(width=15)
+                self.searchentry.grid(row=0, column=0, pady=5, padx=5, columnspan=2)
                 searchentrybut = Button(self.searchentryframe, text="Filter", command=lambda: search(1))
                 searchentrybut.grid(row=1, column=0, pady=(0, 10))
                 image1 = Image.open("images/search-icon.png")
