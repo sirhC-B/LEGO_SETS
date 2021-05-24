@@ -181,7 +181,6 @@ class UserInterface:
         self.textInfo = Text(self.footerFrame, height=7, width=90)
         self.textInfo.grid(row=1, padx=(20,10), pady=5)
 
-
         ########### SEARCH ############
         def search(var):
             query = self.searchentry.get()
